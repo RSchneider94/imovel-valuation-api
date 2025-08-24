@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
+import { SimilarProperty } from '../types/common';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,10 +32,11 @@ export default async function calculate(
   const prices = matches.map((m) => Number(m.price));
   const avgPrice =
     prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+  const similarProperties: SimilarProperty[] = matches ?? [];
 
   return {
     input: query,
     estimatedPrice: avgPrice,
-    similarProperties: matches,
+    similarProperties,
   };
 }

@@ -1,19 +1,19 @@
-export type Property = {
-  type: string;
-  city: string;
-  state: string;
-  neighborhood: string;
-  street: string;
-  link?: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  size: number;
-  parkingSpaces: number;
+import { Tables } from './database';
+
+export type Property = Tables<'properties'>;
+
+export type SimilarProperty = Omit<
+  Property,
+  | 'coordinates'
+  | 'link'
+  | 'price'
+  | 'created_at'
+  | 'updated_at'
+  | 'embedding'
+  | 'lat'
+  | 'lng'
+> & {
+  similarity: number;
 };
 
-export type Coordinates = { lat: number; lng: number };
-
-export type PropertyWithCoordinates = Property & {
-  coordinates: Coordinates | null;
-};
+export type SimilarProperties = SimilarProperty[];

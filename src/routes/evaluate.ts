@@ -1,16 +1,14 @@
 import { FastifyInstance } from 'fastify';
-import { PropertyWithCoordinates } from '../types/common';
+import { Property, SimilarProperty } from '../types/common';
+import calculate from '../utils/calculate';
 
-type EvaluateBody = Omit<
-  PropertyWithCoordinates,
-  'coordinates' | 'link' | 'price'
->;
+type EvaluateBody = Omit<Property, 'coordinates' | 'link' | 'price'>;
 
 type EvaluateResponse = {
   200: {
-    input: EvaluateBody;
-    // idealPrice: number;
-    similar: PropertyWithCoordinates[];
+    input: string;
+    estimatedPrice: number;
+    similarProperties: SimilarProperty[];
   };
   500: { error: string };
 };
@@ -20,23 +18,14 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     Body: EvaluateBody;
     Reply: EvaluateResponse;
   }>('/evaluate', async (request, reply) => {
-    const body = request.body;
+    try {
+      const userProperty = request.body;
+      const query = `${userProperty.type} com ${userProperty.bedrooms} quartos, ${userProperty.bathrooms} banheiros, ${userProperty.size} m², ${userProperty.parking_spaces} vagas de garagem em ${userProperty.city}, ${userProperty.state}`;
 
-    const { data, error } = await fastify.supabase
-      .from('properties')
-      .select('*')
-      .limit(5);
-
-    if (error) {
-      return reply.status(500).send({ error: error.message });
+      const result = await calculate(fastify, query);
+      return result;
+    } catch (err: any) {
+      return reply.status(500).send({ error: err.message });
     }
-
-    // const idealPrice = body.price * 0.95;
-
-    return {
-      input: body,
-      // idealPrice,
-      similar: data,
-    };
   });
 }
