@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin';
 import { createClient } from '@supabase/supabase-js';
+import { Database } from '../types/database';
 
 export default fp(
   async (fastify) => {
@@ -10,7 +11,7 @@ export default fp(
       throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
     fastify.decorate('supabase', supabase);
   },
