@@ -4,14 +4,7 @@ export type Property = Tables<'properties'>;
 
 export type SimilarProperty = Omit<
   Property,
-  | 'coordinates'
-  | 'link'
-  | 'price'
-  | 'created_at'
-  | 'updated_at'
-  | 'embedding'
-  | 'lat'
-  | 'lng'
+  'link' | 'price' | 'created_at' | 'updated_at' | 'embedding' | 'lat' | 'lng'
 > & {
   distance_km: number;
   embedding_score: number;
