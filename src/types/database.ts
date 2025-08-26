@@ -103,6 +103,7 @@ export type Database = {
           state: string
           street: string
           type: string
+          usage: Database["public"]["Enums"]["usage"] | null
         }
         Insert: {
           bathrooms: number
@@ -120,6 +121,7 @@ export type Database = {
           state: string
           street: string
           type: string
+          usage?: Database["public"]["Enums"]["usage"] | null
         }
         Update: {
           bathrooms?: number
@@ -137,6 +139,7 @@ export type Database = {
           state?: string
           street?: string
           type?: string
+          usage?: Database["public"]["Enums"]["usage"] | null
         }
         Relationships: []
       }
@@ -270,6 +273,7 @@ export type Database = {
           state: string
           street: string
           type: string
+          usage: string
         }[]
       }
       sparsevec_out: {
@@ -310,7 +314,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      usage: "venda" | "aluguel"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -437,6 +441,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      usage: ["venda", "aluguel"],
+    },
   },
 } as const
