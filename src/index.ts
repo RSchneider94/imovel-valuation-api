@@ -17,6 +17,21 @@ const server = Fastify({
 // Register plugins
 server.register(supabasePlugin);
 
+// Add CORS support
+server.addHook('onRequest', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', '*');
+  reply.header(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, OPTIONS'
+  );
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  reply.header('Content-Type', 'application/json');
+
+  if (request.method === 'OPTIONS') {
+    reply.send();
+  }
+});
+
 // Register routes
 server.register(evaluateRoutes);
 
