@@ -2,8 +2,6 @@ import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 export default async function calculate(
   fastify: FastifyInstance,
   query: string
@@ -11,6 +9,8 @@ export default async function calculate(
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not set');
   }
+
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const embeddingResponse = await openai.embeddings.create({
     model: 'text-embedding-3-small',
