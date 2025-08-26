@@ -24,10 +24,11 @@ export default async function calculate(
   const queryEmbedding = embeddingResponse.data[0].embedding;
 
   const { data: matches, error } = await fastify.supabase.rpc(
-    'match_properties',
+    'match_properties_hybrid',
     {
       query_embedding: JSON.stringify(queryEmbedding),
-      match_count: 5,
+      user_lat: 0,
+      user_lng: 0,
     }
   );
 

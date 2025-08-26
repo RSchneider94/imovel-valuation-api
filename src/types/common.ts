@@ -13,7 +13,9 @@ export type SimilarProperty = Omit<
   | 'lat'
   | 'lng'
 > & {
-  similarity: number;
+  distance_km: number;
+  embedding_score: number;
+  hybrid_score: number;
 };
 
 export type SimilarProperties = SimilarProperty[];

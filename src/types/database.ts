@@ -206,6 +206,46 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      cube: {
+        Args: { "": number[] } | { "": number }
+        Returns: unknown
+      }
+      cube_dim: {
+        Args: { "": unknown }
+        Returns: number
+      }
+      cube_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      cube_is_point: {
+        Args: { "": unknown }
+        Returns: boolean
+      }
+      cube_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      cube_recv: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      cube_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      cube_size: {
+        Args: { "": unknown }
+        Returns: number
+      }
+      earth: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      gc_to_sec: {
+        Args: { "": number }
+        Returns: number
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown
@@ -258,6 +298,14 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
+      latitude: {
+        Args: { "": unknown }
+        Returns: number
+      }
+      longitude: {
+        Args: { "": unknown }
+        Returns: number
+      }
       match_properties: {
         Args: { match_count?: number; query_embedding: string }
         Returns: {
@@ -275,6 +323,38 @@ export type Database = {
           type: string
           usage: string
         }[]
+      }
+      match_properties_hybrid: {
+        Args: {
+          embedding_weight?: number
+          geo_weight?: number
+          match_count?: number
+          query_embedding: string
+          radius_km?: number
+          user_lat: number
+          user_lng: number
+        }
+        Returns: {
+          bathrooms: number
+          bedrooms: number
+          city: string
+          distance_km: number
+          embedding_score: number
+          hybrid_score: number
+          id: string
+          neighborhood: string
+          parking_spaces: number
+          price: number
+          size: number
+          state: string
+          street: string
+          type: string
+          usage: string
+        }[]
+      }
+      sec_to_gc: {
+        Args: { "": number }
+        Returns: number
       }
       sparsevec_out: {
         Args: { "": unknown }
