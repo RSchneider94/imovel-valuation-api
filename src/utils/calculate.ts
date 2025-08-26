@@ -2,6 +2,10 @@ import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 
+export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
+  usage: string;
+};
+
 export default async function calculate(
   fastify: FastifyInstance,
   query: string
@@ -32,7 +36,7 @@ export default async function calculate(
   const prices = matches.map((m) => Number(m.price));
   const avgPrice =
     prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
-  const similarProperties: SimilarProperty[] = matches ?? [];
+  const similarProperties: MatchedProperty[] = matches ?? [];
 
   return {
     input: query,
