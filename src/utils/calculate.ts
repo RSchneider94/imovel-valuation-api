@@ -8,7 +8,9 @@ export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
 
 export default async function calculate(
   fastify: FastifyInstance,
-  query: string
+  query: string,
+  userLat: number,
+  userLng: number
 ) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not set');
@@ -29,8 +31,8 @@ export default async function calculate(
     'match_properties_hybrid',
     {
       query_embedding: JSON.stringify(queryEmbedding),
-      user_lat: 0,
-      user_lng: 0,
+      user_lat: userLat,
+      user_lng: userLng,
     }
   );
 

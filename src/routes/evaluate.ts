@@ -47,7 +47,12 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
       });
 
       try {
-        const result = await calculate(fastify, query);
+        const result = await calculate(
+          fastify,
+          query,
+          userProperty.lat ?? 0,
+          userProperty.lng ?? 0
+        );
         console.log('✅ Calculation completed');
         processResults[processId] = {
           status: 'done',
