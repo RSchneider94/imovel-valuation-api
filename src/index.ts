@@ -12,7 +12,22 @@ import evaluateRoutes from './routes/evaluate';
 dotenv.config();
 
 const server = Fastify({
-  logger: true,
+  logger:
+    process.env.NODE_ENV === 'production'
+      ? {
+          level: 'info',
+          serializers: {
+            req: (req) => ({
+              method: req.method,
+              url: req.url,
+              remoteAddress: req.ip,
+            }),
+            res: (res) => ({
+              statusCode: res.statusCode,
+            }),
+          },
+        }
+      : true,
 });
 
 // Register plugins
@@ -20,7 +35,9 @@ server.register(supabasePlugin);
 
 // Add CORS support
 server.register(cors, {
-  origin: 'http://localhost:3000',
+  origin: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -37,8 +54,12 @@ server.get('/health', async () => {
 // Start server
 const start = async () => {
   try {
-    await server.listen({ port: Number(process.env.PORT), host: '0.0.0.0' });
-    console.log(`Server is running on http://localhost:${process.env.PORT}`);
+    const port = Number(process.env.PORT) || 3000;
+    const host = process.env.HOST || '0.0.0.0';
+
+    await server.listen({ port, host });
+    console.log(`Server is running on http://${host}:${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

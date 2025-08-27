@@ -2,12 +2,15 @@
   "name": "imovel-valuation-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "build:clean": "rm -rf dist && tsc",
+    "start:prod": "node dist/index.js",
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
