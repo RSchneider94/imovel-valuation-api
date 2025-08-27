@@ -14,6 +14,8 @@ export default async function calculate(
     throw new Error('OPENAI_API_KEY is not set');
   }
 
+  console.log('⏳ Starting calculation...');
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const embeddingResponse = await openai.embeddings.create({
@@ -32,12 +34,16 @@ export default async function calculate(
     }
   );
 
+  console.log('✅ Matches found:', matches?.length ?? 0);
+
   if (error) throw error;
 
   const prices = matches.map((m) => Number(m.price));
   const avgPrice =
     prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
   const similarProperties: MatchedProperty[] = matches ?? [];
+
+  console.log('✅ Similar properties:', similarProperties.length);
 
   return {
     input: query,

@@ -48,11 +48,13 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
 
       try {
         const result = await calculate(fastify, query);
+        console.log('✅ Calculation completed');
         processResults[processId] = {
           status: 'done',
           result,
         };
       } catch (err: any) {
+        console.error('❌ Error calculating:', err.message);
         processResults[processId] = {
           status: 'error',
           error: err.message,
@@ -82,6 +84,13 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
 
     const interval = setInterval(() => {
       if (processResults[processId]?.status === 'done') {
+        reply.raw.write(
+          `data: ${JSON.stringify(processResults[processId])}\n\n`
+        );
+        clearInterval(interval);
+        delete processResults[processId];
+        reply.raw.end();
+      } else if (processResults[processId]?.status === 'error') {
         reply.raw.write(
           `data: ${JSON.stringify(processResults[processId])}\n\n`
         );
