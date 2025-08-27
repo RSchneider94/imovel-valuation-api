@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 
 // Plugins
@@ -18,18 +19,11 @@ const server = Fastify({
 server.register(supabasePlugin);
 
 // Add CORS support
-server.addHook('onRequest', async (request, reply) => {
-  reply.header('Access-Control-Allow-Origin', '*');
-  reply.header(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS'
-  );
-  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  reply.header('Content-Type', 'application/json');
-
-  if (request.method === 'OPTIONS') {
-    reply.send();
-  }
+server.register(cors, {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 });
 
 // Register routes

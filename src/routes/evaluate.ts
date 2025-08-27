@@ -69,11 +69,16 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     };
     Reply: ProcessResult;
   }>('/evaluate/:processId', async (request, reply) => {
+    const raw = reply.raw;
     const processId = request.params.processId;
 
-    reply.header('Content-Type', 'text/event-stream');
-    reply.header('Cache-Control', 'no-cache');
-    reply.header('Connection', 'keep-alive');
+    raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+      'Access-Control-Allow-Origin': 'http://localhost:3000',
+      'Access-Control-Allow-Credentials': 'true',
+    });
 
     const interval = setInterval(() => {
       if (processResults[processId]?.status === 'done') {
@@ -85,5 +90,9 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
         reply.raw.end();
       }
     }, 1000);
+
+    request.socket.on('close', () => {
+      clearInterval(interval);
+    });
   });
 }
