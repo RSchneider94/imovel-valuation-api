@@ -83,7 +83,9 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': 'http://localhost:3000',
+      'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(',')[0]
+        : 'http://localhost:3000',
       'Access-Control-Allow-Credentials': 'true',
     });
 

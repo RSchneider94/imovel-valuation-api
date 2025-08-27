@@ -9,7 +9,9 @@ import supabasePlugin from './plugins/supabase';
 import evaluateRoutes from './routes/evaluate';
 
 // Load environment variables
-dotenv.config();
+dotenv.config({
+  debug: process.env.NODE_ENV === 'development',
+});
 
 const server = Fastify({
   logger:
@@ -54,7 +56,7 @@ server.get('/health', async () => {
 // Start server
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) || 3000;
+    const port = Number(process.env.PORT) || 3001;
     const host = process.env.HOST || '0.0.0.0';
 
     await server.listen({ port, host });
