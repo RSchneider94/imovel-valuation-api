@@ -349,7 +349,7 @@ export type Database = {
           state: string
           street: string
           type: string
-          usage: string
+          usage: Database["public"]["Enums"]["usage"]
         }[]
       }
       sec_to_gc: {
