@@ -96,12 +96,15 @@ export type Database = {
           city: string
           created_at: string | null
           embedding: string | null
+          furnished: boolean | null
           id: string
           lat: number | null
+          link: string | null
           lng: number | null
           neighborhood: string | null
           parking_spaces: number
           price: number
+          propertyId: string | null
           size: number
           state: string
           street: string
@@ -114,12 +117,15 @@ export type Database = {
           city: string
           created_at?: string | null
           embedding?: string | null
+          furnished?: boolean | null
           id?: string
           lat?: number | null
+          link?: string | null
           lng?: number | null
           neighborhood?: string | null
           parking_spaces: number
           price: number
+          propertyId?: string | null
           size: number
           state: string
           street: string
@@ -132,12 +138,15 @@ export type Database = {
           city?: string
           created_at?: string | null
           embedding?: string | null
+          furnished?: boolean | null
           id?: string
           lat?: number | null
+          link?: string | null
           lng?: number | null
           neighborhood?: string | null
           parking_spaces?: number
           price?: number
+          propertyId?: string | null
           size?: number
           state?: string
           street?: string
