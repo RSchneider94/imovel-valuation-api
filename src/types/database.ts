@@ -358,6 +358,7 @@ export type Database = {
           furnished: boolean
           hybrid_score: number
           id: string
+          link: string
           neighborhood: string
           parking_spaces: number
           price: number
