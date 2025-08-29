@@ -22,6 +22,7 @@ type ProcessResult = {
       input: string;
       estimatedPrice: number;
       similarProperties: MatchedProperty[];
+      avgPrecision: number;
     };
   };
   500: { status: 'error'; error: string };
@@ -39,7 +40,10 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
   }>('/evaluate', async (request, reply) => {
     try {
       const userProperty = request.body;
-      const query = `${userProperty.type} com a finalidade de ${userProperty.usage} com ${userProperty.bedrooms} quartos, ${userProperty.bathrooms} banheiros, ${userProperty.size} m², ${userProperty.parking_spaces} vagas de garagem na rua ${userProperty.street}, no bairro ${userProperty.neighborhood}, em ${userProperty.city}, ${userProperty.state}`;
+
+      const furnished = userProperty.furnished ? 'com mobília' : 'sem mobília';
+      const rental_type = userProperty.rental_type ?? '';
+      const query = `${userProperty.type}, ${furnished}, com a finalidade de ${userProperty.usage} ${rental_type} com ${userProperty.bedrooms} quartos, ${userProperty.bathrooms} banheiros, ${userProperty.size} m², ${userProperty.parking_spaces} vagas de garagem na rua ${userProperty.street}, no bairro ${userProperty.neighborhood}, em ${userProperty.city}, ${userProperty.state}`;
 
       const processId = uuidv4();
       reply.status(201).send({

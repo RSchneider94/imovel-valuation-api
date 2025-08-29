@@ -104,7 +104,8 @@ export type Database = {
           neighborhood: string | null
           parking_spaces: number
           price: number
-          propertyId: string | null
+          property_id: string | null
+          rental_type: Database["public"]["Enums"]["rental_type"] | null
           size: number
           state: string
           street: string
@@ -125,7 +126,8 @@ export type Database = {
           neighborhood?: string | null
           parking_spaces: number
           price: number
-          propertyId?: string | null
+          property_id?: string | null
+          rental_type?: Database["public"]["Enums"]["rental_type"] | null
           size: number
           state: string
           street: string
@@ -146,7 +148,8 @@ export type Database = {
           neighborhood?: string | null
           parking_spaces?: number
           price?: number
-          propertyId?: string | null
+          property_id?: string | null
+          rental_type?: Database["public"]["Enums"]["rental_type"] | null
           size?: number
           state?: string
           street?: string
@@ -352,11 +355,14 @@ export type Database = {
           city: string
           distance_km: number
           embedding_score: number
+          furnished: boolean
           hybrid_score: number
           id: string
           neighborhood: string
           parking_spaces: number
           price: number
+          property_id: string
+          rental_type: Database["public"]["Enums"]["rental_type"]
           size: number
           state: string
           street: string
@@ -406,6 +412,7 @@ export type Database = {
       }
     }
     Enums: {
+      rental_type: "mensal" | "diario"
       usage: "venda" | "aluguel"
     }
     CompositeTypes: {
@@ -534,6 +541,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      rental_type: ["mensal", "diario"],
       usage: ["venda", "aluguel"],
     },
   },

@@ -27,12 +27,21 @@ export default async function calculate(
 
   const queryEmbedding = embeddingResponse.data[0].embedding;
 
+  const radiusKm = 20;
+  const embeddingWeight = 0.3;
+  const geoWeight = 0.7;
+  const matchCount = 5;
+
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_hybrid',
     {
       query_embedding: JSON.stringify(queryEmbedding),
       user_lat: userLat,
       user_lng: userLng,
+      radius_km: radiusKm,
+      embedding_weight: embeddingWeight,
+      geo_weight: geoWeight,
+      match_count: matchCount,
     }
   );
 
@@ -45,11 +54,19 @@ export default async function calculate(
     prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
   const similarProperties: MatchedProperty[] = matches ?? [];
 
+  // Calculate the average precision of the matches
+  const scores = matches.map((item) => item.hybrid_score);
+  const maxScore = Math.max(...scores);
+  const avgPrecision = Math.round(
+    scores.reduce((acc, s) => acc + (s / maxScore) * 100, 0) / scores.length
+  );
+
   console.log('✅ Similar properties:', similarProperties.length);
 
   return {
     input: query,
     estimatedPrice: avgPrice,
     similarProperties,
+    avgPrecision,
   };
 }
