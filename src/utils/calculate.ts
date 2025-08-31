@@ -46,9 +46,9 @@ export default async function calculate(
       embedding_weight: embeddingWeight,
       geo_weight: geoWeight,
       match_count: matchCount,
-      filter_rental_type: userPropertyRentalType ?? undefined,
+      filter_type: userPropertyType,
       filter_usage: userPropertyUsage ?? undefined,
-      filter_type: userPropertyType ?? undefined,
+      filter_rental_type: userPropertyRentalType ?? undefined,
     }
   );
 
