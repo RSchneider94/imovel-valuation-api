@@ -32,9 +32,9 @@ export default async function calculate(
   const queryEmbedding = embeddingResponse.data[0].embedding;
 
   const radiusKm = 20;
-  const embeddingWeight = 0.3;
-  const geoWeight = 0.7;
-  const matchCount = 5;
+  const embeddingWeight = 0.6;
+  const geoWeight = 0.4;
+  const matchCount = 20;
 
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_hybrid',
