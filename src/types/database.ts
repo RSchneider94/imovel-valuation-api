@@ -342,6 +342,9 @@ export type Database = {
       match_properties_hybrid: {
         Args: {
           embedding_weight?: number
+          filter_rental_type?: Database["public"]["Enums"]["rental_type"]
+          filter_type?: string
+          filter_usage?: Database["public"]["Enums"]["usage"]
           geo_weight?: number
           match_count?: number
           query_embedding: string

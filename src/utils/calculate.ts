@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
+import { Enums } from '../types/database';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -10,7 +11,10 @@ export default async function calculate(
   fastify: FastifyInstance,
   query: string,
   userLat: number,
-  userLng: number
+  userLng: number,
+  userPropertyType: string,
+  userPropertyUsage: Enums<'usage'> | null,
+  userPropertyRentalType: Enums<'rental_type'> | null
 ) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not set');
@@ -42,6 +46,9 @@ export default async function calculate(
       embedding_weight: embeddingWeight,
       geo_weight: geoWeight,
       match_count: matchCount,
+      filter_rental_type: userPropertyRentalType ?? undefined,
+      filter_usage: userPropertyUsage ?? undefined,
+      filter_type: userPropertyType ?? undefined,
     }
   );
 
