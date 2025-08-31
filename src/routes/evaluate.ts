@@ -55,7 +55,10 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
           fastify,
           query,
           userProperty.lat ?? 0,
-          userProperty.lng ?? 0
+          userProperty.lng ?? 0,
+          userProperty.type,
+          userProperty.usage,
+          userProperty.rental_type
         );
         console.log('✅ Calculation completed');
         processResults[processId] = {
