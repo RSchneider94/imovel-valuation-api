@@ -32,9 +32,14 @@ export default async function calculate(
   const queryEmbedding = embeddingResponse.data[0].embedding;
 
   const radiusKm = 20;
-  const embeddingWeight = 0.6;
-  const geoWeight = 0.4;
+  const embeddingWeight = 0.3;
+  const geoWeight = 0.7;
   const matchCount = 20;
+
+  console.log('🔍 Embedding:', JSON.stringify(queryEmbedding));
+  console.log('🔍 Filter usage:', userPropertyUsage);
+  console.log('🔍 Filter rental type:', userPropertyRentalType);
+  console.log('🔍 Filter type:', userPropertyType);
 
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_hybrid',
@@ -47,8 +52,8 @@ export default async function calculate(
       geo_weight: geoWeight,
       match_count: matchCount,
       filter_type: userPropertyType,
-      filter_usage: userPropertyUsage ?? undefined,
-      filter_rental_type: userPropertyRentalType ?? undefined,
+      filter_usage: userPropertyUsage || undefined,
+      filter_rental_type: userPropertyRentalType || undefined,
     }
   );
 
