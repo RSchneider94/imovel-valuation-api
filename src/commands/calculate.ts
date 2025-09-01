@@ -1,6 +1,11 @@
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 import { Enums } from '../types/database';
+import {
+  ZonevalService,
+  type ZonevalValidation,
+  type MarketInsights,
+} from '../services/zoneval';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -19,6 +24,7 @@ export default async function calculate(
     size: number;
     parking_spaces: number;
     furnished: boolean;
+    zipcode: string;
   }
 ) {
   console.log('⏳ Starting structured calculation...');
@@ -34,6 +40,7 @@ export default async function calculate(
     size: userProperty.size,
     parking_spaces: userProperty.parking_spaces,
     furnished: userProperty.furnished,
+    zipcode: userProperty.zipcode,
   });
 
   const { data: matches, error } = await fastify.supabase.rpc(
@@ -94,6 +101,83 @@ export default async function calculate(
   const similarProperties: MatchedProperty[] = matchesArray;
 
   console.log('✅ Similar properties:', similarProperties.length);
+
+  // Initialize Zoneval validation
+  let zonevalValidation: ZonevalValidation | null = null;
+  let refinedPrice = avgPrice;
+  let marketInsights: MarketInsights | null = null;
+
+  if (userProperty.zipcode && userProperty.size > 0) {
+    console.log('🔍 Validating with Zoneval API...');
+    const zonevalService = new ZonevalService();
+
+    if (zonevalService.isAvailable()) {
+      try {
+        zonevalValidation = await zonevalService.validateProperty(
+          userProperty.zipcode,
+          avgPrice,
+          userProperty.size
+        );
+
+        if (zonevalValidation) {
+          console.log('✅ Zoneval validation completed');
+          console.log(`📊 Market reality: ${zonevalValidation.marketReality}`);
+          console.log(`📊 Deviation: ${zonevalValidation.marketDeviation}%`);
+          console.log(`📊 Confidence: ${zonevalValidation.confidence}%`);
+
+          // Refine price based on market reality
+          if (
+            zonevalValidation.marketReality === 'above_market' &&
+            zonevalValidation.confidence > 50
+          ) {
+            // If our estimate is above market, adjust down slightly
+            const adjustmentFactor = Math.min(
+              Math.abs(zonevalValidation.marketDeviation) / 100,
+              0.1
+            );
+            refinedPrice = avgPrice * (1 - adjustmentFactor);
+            marketInsights = {
+              message: `Preço estimado está ${Math.abs(
+                zonevalValidation.marketDeviation
+              )}% acima do mercado local. Ajuste aplicado para maior realismo.`,
+              type: 'above_market_adjustment',
+            };
+          } else if (
+            zonevalValidation.marketReality === 'below_market' &&
+            zonevalValidation.confidence > 50
+          ) {
+            // If our estimate is below market, adjust up slightly
+            const adjustmentFactor = Math.min(
+              Math.abs(zonevalValidation.marketDeviation) / 100,
+              0.1
+            );
+            refinedPrice = avgPrice * (1 + adjustmentFactor);
+            marketInsights = {
+              message: `Preço estimado está ${Math.abs(
+                zonevalValidation.marketDeviation
+              )}% abaixo do mercado local. Ajuste aplicado para maior realismo.`,
+              type: 'below_market_adjustment',
+            };
+          } else if (zonevalValidation.marketReality === 'within_market') {
+            marketInsights = {
+              message: `Preço estimado está alinhado com o mercado local (±${Math.abs(
+                zonevalValidation.marketDeviation
+              )}% de variação).`,
+              type: 'within_market',
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Zoneval validation failed:', error);
+      }
+    } else {
+      console.log('🔍 Zoneval API not available - skipping market validation');
+    }
+  } else {
+    console.log(
+      '🔍 CEP or property size not available - skipping market validation'
+    );
+  }
 
   return {
     estimatedPrice: medianPrice,

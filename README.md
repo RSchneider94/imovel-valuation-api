@@ -6,7 +6,8 @@ A Fastify-based API for property valuation with Supabase integration.
 
 - Fastify server with TypeScript support
 - Supabase integration for data storage
-- Property evaluation endpoints
+- Property evaluation endpoints with AI-powered similarity matching
+- **Market validation using Zoneval API** - "Prova dos 9" feature
 - Environment-based configuration
 
 ## Setup
@@ -19,10 +20,14 @@ A Fastify-based API for property valuation with Supabase integration.
 2. **Environment Configuration:**
    Create a `.env` file in the root directory with:
    ```env
+   # Required
+   OPENAI_API_KEY=your_openai_api_key_here
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    PORT=3000
    NODE_ENV=development
+   ZONEVAL_API_KEY=your_zoneval_api_key_here
+   ZONEVAL_API_SECRET=your_zoneval_api_secret_here
    ```
 
 3. **Supabase Setup:**
@@ -59,24 +64,51 @@ npm start
 - `POST /evaluate` - Create a new property evaluation
   ```json
   {
-    "propertyType": "apartment",
-    "location": "São Paulo, SP",
+    "type": "apartamento",
+    "usage": "venda",
+    "rental_type": null,
     "size": 80,
     "bedrooms": 2,
-    "bathrooms": 1
+    "bathrooms": 1,
+    "parking_spaces": 1,
+    "furnished": false,
+    "street": "Rua das Flores",
+    "neighborhood": "Centro",
+    "city": "São Paulo",
+    "state": "SP",
+    "lat": -23.5505,
+    "lng": -46.6333,
+    "cep": "01234-567"
   }
   ```
 
-- `GET /evaluations` - Get all property evaluations
+- `GET /evaluate/:processId` - Get evaluation results via Server-Sent Events
+
+**Response includes:**
+- `estimatedPrice`: Initial AI-based estimation
+- `refinedPrice`: Price adjusted based on market validation
+- `zonevalValidation`: Market data from Zoneval API
+- `marketInsights`: Analysis and recommendations with type safety
 
 ## How the Integration Works
 
-The `fastify-supabase` plugin automatically:
+### AI-Powered Property Matching
 
-1. **Registers the Supabase client** with your Fastify instance
-2. **Makes the client available** via `fastify.supabase` in your routes
-3. **Handles connection management** and error handling
-4. **Provides type safety** for Supabase operations
+The system uses OpenAI embeddings to find similar properties in your database:
+
+1. **Generates embeddings** for the user's property description
+2. **Finds similar properties** using hybrid search (embedding + geographic proximity)
+3. **Calculates average price** from the most similar properties
+
+### Market Validation ("Prova dos 9")
+
+When Zoneval API credentials are configured, the system:
+
+1. **Extracts CEP** from the property address
+2. **Queries Zoneval API** for market data in the area
+3. **Compares estimated price** with local market reality
+4. **Provides refined price** and market insights
+5. **Gives confidence score** based on available data
 
 ### Accessing Supabase in Routes
 
@@ -95,10 +127,20 @@ const { data, error } = await supabase
 ```
 src/
 ├── index.ts              # Main server file
+├── commands/
+│   └── calculate.ts      # Property calculation logic
 ├── plugins/
 │   └── supabase.ts      # Supabase plugin configuration
-└── routes/
-    └── evaluate.ts       # Property evaluation routes
+├── routes/
+│   └── evaluate.ts       # Property evaluation routes
+├── services/
+│   └── zoneval.ts       # Zoneval API integration
+├── types/
+│   ├── common.ts        # Common type definitions
+│   └── database.ts      # Database schema types
+└── utils/
+    ├── formatters.ts    # Utility functions
+    └── cep-extractor.ts # CEP extraction utilities
 ```
 
 ## Dependencies
