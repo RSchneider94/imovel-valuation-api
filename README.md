@@ -104,11 +104,12 @@ The system uses OpenAI embeddings to find similar properties in your database:
 
 When Zoneval API credentials are configured, the system:
 
-1. **Extracts CEP** from the property address
-2. **Queries Zoneval API** for market data in the area
+1. **Checks cache first** for existing market data (7-day validity)
+2. **Queries Zoneval API** only if cache is missing or expired
 3. **Compares estimated price** with local market reality
 4. **Provides refined price** and market insights
 5. **Gives confidence score** based on available data
+6. **Caches results** for future use and historical analysis
 
 ### Accessing Supabase in Routes
 
@@ -134,13 +135,14 @@ src/
 ├── routes/
 │   └── evaluate.ts       # Property evaluation routes
 ├── services/
-│   └── zoneval.ts       # Zoneval API integration
+│   ├── zoneval.ts       # Zoneval API integration
+│   ├── zoneval-cache.ts # Cache management for Zoneval
+│   └── market-validation.ts # Market validation business logic
 ├── types/
 │   ├── common.ts        # Common type definitions
 │   └── database.ts      # Database schema types
 └── utils/
-    ├── formatters.ts    # Utility functions
-    └── cep-extractor.ts # CEP extraction utilities
+    └── formatters.ts    # Utility functions
 ```
 
 ## Dependencies

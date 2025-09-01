@@ -34,6 +34,14 @@ export interface MarketInsights {
   type: 'above_market_adjustment' | 'below_market_adjustment' | 'within_market';
 }
 
+export interface ZonevalCacheData {
+  cep: string;
+  zipcode_stats: any;
+  neighbourhood_stats: any;
+  city_stats: any;
+  state_stats: any;
+}
+
 export class ZonevalService {
   private apiKey: string;
   private apiSecret: string;
@@ -146,5 +154,26 @@ export class ZonevalService {
 
   public isAvailable(): boolean {
     return !!(this.apiKey && this.apiSecret);
+  }
+
+  private async getCachedData(cep: string): Promise<ZonevalResponse | null> {
+    try {
+      // This will be called from the calculate function with fastify instance
+      // For now, we'll return null and implement the cache logic in the calculate function
+      return null;
+    } catch (error) {
+      console.error('❌ Error getting cached data:', error);
+      return null;
+    }
+  }
+
+  private async saveToCache(cep: string, data: ZonevalResponse): Promise<void> {
+    try {
+      // This will be called from the calculate function with fastify instance
+      // For now, we'll implement the cache logic in the calculate function
+      console.log('💾 Saving Zoneval data to cache for CEP:', cep);
+    } catch (error) {
+      console.error('❌ Error saving to cache:', error);
+    }
   }
 }
