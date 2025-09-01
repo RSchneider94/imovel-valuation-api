@@ -73,7 +73,10 @@ export class ZonevalCacheService {
     }
   }
 
-  private isCacheExpired(updatedAt: string): boolean {
+  private isCacheExpired(updatedAt: string | null): boolean {
+    if (!updatedAt) {
+      return true;
+    }
     const cacheAge = Date.now() - new Date(updatedAt).getTime();
     const maxAge = this.CACHE_VALIDITY_DAYS * 24 * 60 * 60 * 1000; // days in milliseconds
     return cacheAge > maxAge;
@@ -98,6 +101,9 @@ export class ZonevalCacheService {
 
       const stats = data.reduce(
         (acc, item) => {
+          if (!item.updated_at) {
+            return acc;
+          }
           const age = now - new Date(item.updated_at).getTime();
           if (age <= maxAge) {
             acc.valid++;

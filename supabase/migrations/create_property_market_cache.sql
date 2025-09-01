@@ -21,13 +21,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_property_market_cache_cep_unique ON proper
 
 -- Function to update updated_at timestamp
 CREATE
-OR REPLACE FUNCTION update_property_market_cache_updated_at() RETURNS TRIGGER AS $ $ BEGIN NEW.updated_at = NOW();
+OR REPLACE FUNCTION update_property_market_cache_updated_at() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW();
 
 RETURN NEW;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
 CREATE TRIGGER trigger_update_property_market_cache_updated_at BEFORE
