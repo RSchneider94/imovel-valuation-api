@@ -95,15 +95,12 @@ export class ZonevalService {
     propertySize: number
   ): Promise<ZonevalValidation | null> {
     try {
-      // Remove non-numeric characters from CEP
-      const cleanCep = zipcode.replace(/\D/g, '');
-
-      if (cleanCep.length !== 8) {
+      if (zipcode.length !== 8) {
         console.warn(`⚠️ Invalid CEP format: ${zipcode}`);
         return null;
       }
 
-      const data = await this.makeRequest(cleanCep);
+      const data = await this.makeRequest(zipcode);
 
       // Calculate price per m² for our estimation
       const pricePerM2 = estimatedPrice / propertySize;
@@ -154,31 +151,5 @@ export class ZonevalService {
 
   public isAvailable(): boolean {
     return !!(this.apiKey && this.apiSecret);
-  }
-
-  private async getCachedData(
-    zipcode: string
-  ): Promise<ZonevalResponse | null> {
-    try {
-      // This will be called from the calculate function with fastify instance
-      // For now, we'll return null and implement the cache logic in the calculate function
-      return null;
-    } catch (error) {
-      console.error('❌ Error getting cached data:', error);
-      return null;
-    }
-  }
-
-  private async saveToCache(
-    zipcode: string,
-    data: ZonevalResponse
-  ): Promise<void> {
-    try {
-      // This will be called from the calculate function with fastify instance
-      // For now, we'll implement the cache logic in the calculate function
-      console.log('💾 Saving Zoneval data to cache for CEP:', zipcode);
-    } catch (error) {
-      console.error('❌ Error saving to cache:', error);
-    }
   }
 }

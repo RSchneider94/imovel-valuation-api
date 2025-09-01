@@ -8,6 +8,7 @@ A Fastify-based API for property valuation with Supabase integration.
 - Supabase integration for data storage
 - Property evaluation endpoints with AI-powered similarity matching
 - **Market validation using Zoneval API** - "Prova dos 9" feature
+- **Smart CEP fallback system** - Automatically retrieves zipcode from coordinates when Autocomplete API fails
 - Environment-based configuration
 
 ## Setup
@@ -28,6 +29,7 @@ A Fastify-based API for property valuation with Supabase integration.
    NODE_ENV=development
    ZONEVAL_API_KEY=your_zoneval_api_key_here
    ZONEVAL_API_SECRET=your_zoneval_api_secret_here
+   GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
    ```
 
 3. **Supabase Setup:**
@@ -91,6 +93,26 @@ npm start
 - `marketInsights`: Analysis and recommendations with type safety
 
 ## How the Integration Works
+
+### Smart CEP Fallback System
+
+When the frontend's Autocomplete API fails to provide a zipcode, the backend automatically attempts to retrieve it using reverse geocoding:
+
+1. **Google Geocoding API** (if `GOOGLE_MAPS_API_KEY` is provided)
+   - Most accurate results
+   - Requires API key but provides highest confidence
+
+2. **OpenStreetMap Nominatim** (free fallback)
+   - No API key required
+   - Good coverage for Brazil
+   - Slightly lower accuracy than Google
+
+3. **ViaCEP Integration** (Brazil-specific fallback)
+   - Searches for nearest CEPs in the area
+   - Uses city/state information from other services
+   - Provides reasonable approximations
+
+The system logs the source and confidence level of the retrieved zipcode, ensuring transparency in the market validation process.
 
 ### AI-Powered Property Matching
 

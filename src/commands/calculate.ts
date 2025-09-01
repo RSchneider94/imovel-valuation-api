@@ -8,6 +8,8 @@ import {
 } from '../services/zoneval';
 import { ZonevalCacheService } from '../services/zoneval-cache';
 import { MarketValidationService } from '../services/market-validation';
+import { GeocodingService } from '../services/geocoding';
+import { cleanZipcode } from '../utils/formatters';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -44,6 +46,30 @@ export default async function calculate(
     furnished: userProperty.furnished,
     zipcode: userProperty.zipcode,
   });
+
+  // Fallback: Get zipcode from coordinates if not provided
+  let finalZipcode = cleanZipcode(userProperty.zipcode ?? '');
+  if (!finalZipcode && userProperty.lat && userProperty.lng) {
+    console.log('🔍 No zipcode provided, attempting reverse geocoding...');
+    try {
+      const geocodingService = new GeocodingService();
+      const geocodingResult = await geocodingService.getZipcodeFromCoordinates({
+        lat: userProperty.lat,
+        lng: userProperty.lng,
+      });
+
+      if (geocodingResult?.zipcode) {
+        finalZipcode = geocodingResult.zipcode;
+        console.log(
+          `✅ Retrieved zipcode via geocoding: ${finalZipcode} (source: ${geocodingResult.source})`
+        );
+      } else {
+        console.log('⚠️ Could not retrieve zipcode from coordinates');
+      }
+    } catch (error) {
+      console.warn('⚠️ Geocoding fallback failed:', error);
+    }
+  }
 
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_structured',
@@ -110,6 +136,7 @@ export default async function calculate(
   let marketInsights: MarketInsights | null = null;
 
   if (userProperty.zipcode && userProperty.size > 0) {
+  if (finalZipcode && userProperty.size > 0) {
     console.log('🔍 Validating with Zoneval API...');
 
     const zonevalService = new ZonevalService();
@@ -120,7 +147,7 @@ export default async function calculate(
     );
 
     const validationResult = await marketValidationService.validateProperty(
-      userProperty.zipcode,
+      finalZipcode,
       avgPrice,
       userProperty.size
     );
@@ -139,6 +166,11 @@ export default async function calculate(
     console.log(
       '🔍 CEP or property size not available - skipping market validation'
     );
+    if (!finalZipcode) {
+      console.log(
+        '💡 Tip: Provide zipcode or ensure coordinates are accurate for better market validation'
+      );
+    }
   }
 
   return {
