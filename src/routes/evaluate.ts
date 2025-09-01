@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import { Property } from '../types/common';
-import calculate, { type MatchedProperty } from '../utils/calculate';
+import calculate, { type MatchedProperty } from '../commands/calculate';
+import { capitalize } from '../utils/formatters';
 
 type EvaluateBody = Omit<
   Property,
@@ -56,7 +57,7 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
           query,
           userProperty.lat ?? 0,
           userProperty.lng ?? 0,
-          userProperty.type,
+          capitalize(userProperty.type),
           userProperty.usage,
           userProperty.rental_type
         );
