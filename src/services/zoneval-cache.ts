@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { ZonevalValidation } from './zoneval';
 
 export interface ZonevalCacheData {
-  cep: string;
+  zipcode: string;
   zipcode_stats: any;
   neighbourhood_stats: any;
   city_stats: any;
@@ -17,12 +17,12 @@ export class ZonevalCacheService {
     this.fastify = fastify;
   }
 
-  async getCachedData(cep: string): Promise<any> {
+  async getCachedData(zipcode: string): Promise<any> {
     try {
       const { data, error } = await this.fastify.supabase
         .from('property_market_cache')
         .select('*')
-        .eq('cep', cep)
+        .eq('zipcode', zipcode)
         .single();
 
       if (error || !data) {
@@ -46,10 +46,13 @@ export class ZonevalCacheService {
     }
   }
 
-  async saveToCache(cep: string, validation: ZonevalValidation): Promise<void> {
+  async saveToCache(
+    zipcode: string,
+    validation: ZonevalValidation
+  ): Promise<void> {
     try {
       const cacheData = {
-        cep,
+        zipcode,
         zipcode_stats: validation.zipcode as any,
         neighbourhood_stats: validation.neighbourhood as any,
         city_stats: validation.city as any,
@@ -58,7 +61,7 @@ export class ZonevalCacheService {
 
       const { error } = await this.fastify.supabase
         .from('property_market_cache')
-        .upsert(cacheData, { onConflict: 'cep' });
+        .upsert(cacheData, { onConflict: 'zipcode' });
 
       if (error) {
         console.error('❌ Error saving to cache:', error);

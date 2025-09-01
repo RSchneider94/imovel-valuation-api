@@ -11,10 +11,10 @@ export type SimilarProperty = Omit<
 
 export type SimilarProperties = SimilarProperty[];
 
-// Tipo específico para requisição de avaliação com CEP
+// Specific type for evaluation request with zipcode
 export type EvaluationRequest = Omit<
   Property,
   'id' | 'link' | 'price' | 'created_at' | 'updated_at' | 'embedding'
 > & {
-  cep?: string; // CEP opcional do Google Places API
+  zipcode?: string;
 };

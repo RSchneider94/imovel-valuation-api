@@ -42,7 +42,7 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     try {
       const userProperty: EvaluationRequest = request.body;
 
-      if (!userProperty.usage) {
+      if (!userProperty.usage || !userProperty.zipcode) {
         return reply.status(400).send({ error: 'Usage is required' });
       }
 

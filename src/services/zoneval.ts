@@ -35,7 +35,7 @@ export interface MarketInsights {
 }
 
 export interface ZonevalCacheData {
-  cep: string;
+  zipcode: string;
   zipcode_stats: any;
   neighbourhood_stats: any;
   city_stats: any;
@@ -58,12 +58,12 @@ export class ZonevalService {
     }
   }
 
-  private async makeRequest(cep: string): Promise<ZonevalResponse> {
+  private async makeRequest(zipcode: string): Promise<ZonevalResponse> {
     if (!this.apiKey || !this.apiSecret) {
       throw new Error('Zoneval API credentials not configured');
     }
 
-    const response = await fetch(`${this.baseUrl}/zipcodes/${cep}/stats`, {
+    const response = await fetch(`${this.baseUrl}/zipcodes/${zipcode}/stats`, {
       headers: {
         'x-api-key': this.apiKey,
         'x-api-secret': this.apiSecret,
@@ -90,16 +90,16 @@ export class ZonevalService {
   }
 
   public async validateProperty(
-    cep: string,
+    zipcode: string,
     estimatedPrice: number,
     propertySize: number
   ): Promise<ZonevalValidation | null> {
     try {
       // Remove non-numeric characters from CEP
-      const cleanCep = cep.replace(/\D/g, '');
+      const cleanCep = zipcode.replace(/\D/g, '');
 
       if (cleanCep.length !== 8) {
-        console.warn(`⚠️ Invalid CEP format: ${cep}`);
+        console.warn(`⚠️ Invalid CEP format: ${zipcode}`);
         return null;
       }
 
@@ -156,7 +156,9 @@ export class ZonevalService {
     return !!(this.apiKey && this.apiSecret);
   }
 
-  private async getCachedData(cep: string): Promise<ZonevalResponse | null> {
+  private async getCachedData(
+    zipcode: string
+  ): Promise<ZonevalResponse | null> {
     try {
       // This will be called from the calculate function with fastify instance
       // For now, we'll return null and implement the cache logic in the calculate function
@@ -167,11 +169,14 @@ export class ZonevalService {
     }
   }
 
-  private async saveToCache(cep: string, data: ZonevalResponse): Promise<void> {
+  private async saveToCache(
+    zipcode: string,
+    data: ZonevalResponse
+  ): Promise<void> {
     try {
       // This will be called from the calculate function with fastify instance
       // For now, we'll implement the cache logic in the calculate function
-      console.log('💾 Saving Zoneval data to cache for CEP:', cep);
+      console.log('💾 Saving Zoneval data to cache for CEP:', zipcode);
     } catch (error) {
       console.error('❌ Error saving to cache:', error);
     }

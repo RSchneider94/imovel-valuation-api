@@ -14,7 +14,7 @@ export class MarketValidationService {
   }
 
   async validateProperty(
-    cep: string,
+    zipcode: string,
     estimatedPrice: number,
     propertySize: number
   ): Promise<{
@@ -33,7 +33,7 @@ export class MarketValidationService {
 
     try {
       // Check cache first
-      const cachedData = await this.cacheService.getCachedData(cep);
+      const cachedData = await this.cacheService.getCachedData(zipcode);
 
       let validation: ZonevalValidation | null = null;
 
@@ -47,14 +47,14 @@ export class MarketValidationService {
       } else {
         console.log('🌐 Fetching fresh data from Zoneval API');
         validation = await this.zonevalService.validateProperty(
-          cep,
+          zipcode,
           estimatedPrice,
           propertySize
         );
 
         // Save to cache if we got valid data
         if (validation) {
-          await this.cacheService.saveToCache(cep, validation);
+          await this.cacheService.saveToCache(zipcode, validation);
         }
       }
 
