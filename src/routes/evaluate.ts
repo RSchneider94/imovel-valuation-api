@@ -87,13 +87,21 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     const raw = reply.raw;
     const processId = request.params.processId;
 
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : ['http://localhost:3000'];
+
+    const requestOrigin = request.headers.origin;
+    let origin = 'http://localhost:3000';
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+      origin = requestOrigin;
+    }
+
     raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGINS
-        ? process.env.ALLOWED_ORIGINS.split(',')[0]
-        : 'http://localhost:3000',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Credentials': 'true',
     });
 
