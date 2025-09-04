@@ -13,6 +13,7 @@ type EvaluateResponse = {
   201: {
     processId: string;
   };
+  400: { error: string };
   500: { error: string };
 };
 
@@ -20,10 +21,9 @@ type ProcessResult = {
   200: {
     status: 'done';
     result: {
-      input: string;
       estimatedPrice: number;
       similarProperties: MatchedProperty[];
-      avgPrecision: number;
+      avgPrice: number;
     };
   };
   500: { status: 'error'; error: string };
@@ -42,9 +42,9 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     try {
       const userProperty = request.body;
 
-      const furnished = userProperty.furnished ? 'com mobília' : 'sem mobília';
-      const rental_type = userProperty.rental_type ?? '';
-      const query = `${userProperty.type}, ${furnished}, com a finalidade de ${userProperty.usage} ${rental_type} com ${userProperty.bedrooms} quartos, ${userProperty.bathrooms} banheiros, ${userProperty.size} m², ${userProperty.parking_spaces} vagas de garagem na rua ${userProperty.street}, no bairro ${userProperty.neighborhood}, em ${userProperty.city}, ${userProperty.state}`;
+      if (!userProperty.usage) {
+        return reply.status(400).send({ error: 'Usage is required' });
+      }
 
       const processId = uuidv4();
       reply.status(201).send({
@@ -52,15 +52,18 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
       });
 
       try {
-        const result = await calculate(
-          fastify,
-          query,
-          userProperty.lat ?? 0,
-          userProperty.lng ?? 0,
-          capitalize(userProperty.type),
-          userProperty.usage,
-          userProperty.rental_type
-        );
+        const result = await calculate(fastify, {
+          lat: userProperty.lat ?? 0,
+          lng: userProperty.lng ?? 0,
+          type: capitalize(userProperty.type),
+          usage: userProperty.usage,
+          rental_type: userProperty.rental_type,
+          bedrooms: userProperty.bedrooms,
+          bathrooms: userProperty.bathrooms,
+          size: userProperty.size,
+          parking_spaces: userProperty.parking_spaces,
+          furnished: userProperty.furnished ?? false,
+        });
         console.log('✅ Calculation completed');
         processResults[processId] = {
           status: 'done',

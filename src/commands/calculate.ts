@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 import { Enums } from '../types/database';
@@ -9,51 +8,54 @@ export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
 
 export default async function calculate(
   fastify: FastifyInstance,
-  query: string,
-  userLat: number,
-  userLng: number,
-  userPropertyType: string,
-  userPropertyUsage: Enums<'usage'> | null,
-  userPropertyRentalType: Enums<'rental_type'> | null
-) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not set');
+  userProperty: {
+    lat: number;
+    lng: number;
+    type: string;
+    usage: Enums<'usage'>;
+    rental_type: Enums<'rental_type'> | null;
+    bedrooms: number;
+    bathrooms: number;
+    size: number;
+    parking_spaces: number;
+    furnished: boolean;
   }
+) {
+  console.log('⏳ Starting structured calculation...');
 
-  console.log('⏳ Starting calculation...');
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  const embeddingResponse = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: query,
-  });
-
-  const queryEmbedding = embeddingResponse.data[0].embedding;
-
-  const radiusKm = 20;
-  const embeddingWeight = 0.3;
-  const geoWeight = 0.7;
+  const radiusKm = 1;
   const matchCount = 20;
 
-  console.log('🔍 Embedding:', JSON.stringify(queryEmbedding));
-  console.log('🔍 Filter usage:', userPropertyUsage);
-  console.log('🔍 Filter rental type:', userPropertyRentalType);
-  console.log('🔍 Filter type:', userPropertyType);
+  console.log('🔍 User property:', {
+    type: userProperty.type,
+    usage: userProperty.usage,
+    bedrooms: userProperty.bedrooms,
+    bathrooms: userProperty.bathrooms,
+    size: userProperty.size,
+    parking_spaces: userProperty.parking_spaces,
+    furnished: userProperty.furnished,
+  });
 
   const { data: matches, error } = await fastify.supabase.rpc(
-    'match_properties_hybrid',
+    'match_properties_structured',
     {
-      query_embedding: JSON.stringify(queryEmbedding),
-      user_lat: userLat,
-      user_lng: userLng,
+      user_lat: userProperty.lat,
+      user_lng: userProperty.lng,
+      user_bedrooms: userProperty.bedrooms,
+      user_bathrooms: userProperty.bathrooms,
+      user_size: userProperty.size,
+      user_parking_spaces: userProperty.parking_spaces,
+      user_type: userProperty.type,
+      user_usage: userProperty.usage,
+      user_rental_type: userProperty.rental_type || undefined,
+      user_furnished: userProperty.furnished,
+      // Configurable tolerances
+      bedrooms_tolerance: 1,
+      bathrooms_tolerance: 1,
+      size_tolerance_percent: 0.3, // 30% tolerance in size
+      parking_tolerance: 1,
       radius_km: radiusKm,
-      embedding_weight: embeddingWeight,
-      geo_weight: geoWeight,
       match_count: matchCount,
-      filter_type: userPropertyType,
-      filter_usage: userPropertyUsage || undefined,
-      filter_rental_type: userPropertyRentalType || undefined,
     }
   );
 
@@ -61,24 +63,41 @@ export default async function calculate(
 
   if (error) throw error;
 
-  const prices = matches.map((m) => Number(m.price));
-  const avgPrice =
-    prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
-  const similarProperties: MatchedProperty[] = matches ?? [];
+  const matchesArray = matches ?? [];
 
-  // Calculate the average precision of the matches
-  const scores = matches.map((item) => item.hybrid_score);
-  const maxScore = Math.max(...scores);
-  const avgPrecision = Math.round(
-    scores.reduce((acc, s) => acc + (s / maxScore) * 100, 0) / scores.length
-  );
+  if (matchesArray.length === 0) {
+    return {
+      estimatedPrice: 0,
+      medianPrice: 0,
+      similarProperties: [],
+      avgPrice: 0,
+    };
+  }
+
+  // Extract prices and sort them
+  const prices = matchesArray.map((m) => Number(m.price)).sort((a, b) => a - b);
+
+  // Calculate the median price
+  const middle = Math.floor(prices.length / 2);
+  const medianPrice =
+    prices.length % 2 === 0
+      ? (prices[middle - 1] + prices[middle]) / 2
+      : prices[middle];
+
+  // Calculate the robust average price: remove 10% of the highest and lowest prices
+  const lowerIndex = Math.floor(prices.length * 0.1);
+  const upperIndex = Math.ceil(prices.length * 0.9);
+  const filteredPrices = prices.slice(lowerIndex, upperIndex);
+  const avgPrice =
+    filteredPrices.reduce((a, b) => a + b, 0) / filteredPrices.length;
+
+  const similarProperties: MatchedProperty[] = matchesArray;
 
   console.log('✅ Similar properties:', similarProperties.length);
 
   return {
-    input: query,
-    estimatedPrice: avgPrice,
+    estimatedPrice: medianPrice,
+    avgPrice,
     similarProperties,
-    avgPrecision,
   };
 }

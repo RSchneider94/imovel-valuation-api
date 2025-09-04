@@ -7,8 +7,6 @@ export type SimilarProperty = Omit<
   'link' | 'price' | 'created_at' | 'updated_at' | 'embedding' | 'lat' | 'lng'
 > & {
   distance_km: number;
-  embedding_score: number;
-  hybrid_score: number;
 };
 
 export type SimilarProperties = SimilarProperty[];
