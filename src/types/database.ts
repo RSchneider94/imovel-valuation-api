@@ -110,6 +110,7 @@ export type Database = {
           state: string
           street: string
           type: string
+          updated_at: string | null
           usage: Database["public"]["Enums"]["usage"] | null
         }
         Insert: {
@@ -132,6 +133,7 @@ export type Database = {
           state: string
           street: string
           type: string
+          updated_at?: string | null
           usage?: Database["public"]["Enums"]["usage"] | null
         }
         Update: {
@@ -154,6 +156,7 @@ export type Database = {
           state?: string
           street?: string
           type?: string
+          updated_at?: string | null
           usage?: Database["public"]["Enums"]["usage"] | null
         }
         Relationships: []
@@ -209,6 +212,39 @@ export type Database = {
           user_id?: string
           value_range_max?: number | null
           value_range_min?: number | null
+        }
+        Relationships: []
+      }
+      property_market_cache: {
+        Row: {
+          city_stats: Json
+          created_at: string | null
+          id: string
+          neighbourhood_stats: Json
+          state_stats: Json
+          updated_at: string | null
+          zipcode: string
+          zipcode_stats: Json
+        }
+        Insert: {
+          city_stats: Json
+          created_at?: string | null
+          id?: string
+          neighbourhood_stats: Json
+          state_stats: Json
+          updated_at?: string | null
+          zipcode: string
+          zipcode_stats: Json
+        }
+        Update: {
+          city_stats?: Json
+          created_at?: string | null
+          id?: string
+          neighbourhood_stats?: Json
+          state_stats?: Json
+          updated_at?: string | null
+          zipcode?: string
+          zipcode_stats?: Json
         }
         Relationships: []
       }
@@ -321,24 +357,6 @@ export type Database = {
         Args: { "": unknown }
         Returns: number
       }
-      match_properties: {
-        Args: { match_count?: number; query_embedding: string }
-        Returns: {
-          bathrooms: number
-          bedrooms: number
-          city: string
-          id: string
-          neighborhood: string
-          parking_spaces: number
-          price: number
-          similarity: number
-          size: number
-          state: string
-          street: string
-          type: string
-          usage: string
-        }[]
-      }
       match_properties_hybrid: {
         Args: {
           embedding_weight?: number
@@ -360,6 +378,47 @@ export type Database = {
           embedding_score: number
           furnished: boolean
           hybrid_score: number
+          id: string
+          link: string
+          neighborhood: string
+          parking_spaces: number
+          price: number
+          property_id: string
+          rental_type: Database["public"]["Enums"]["rental_type"]
+          size: number
+          state: string
+          street: string
+          type: string
+          usage: Database["public"]["Enums"]["usage"]
+        }[]
+      }
+      match_properties_structured: {
+        Args: {
+          avg_region_price?: number
+          bathrooms_tolerance?: number
+          bedrooms_tolerance?: number
+          match_count?: number
+          max_price_deviation?: number
+          parking_tolerance?: number
+          radius_km?: number
+          size_tolerance_percent?: number
+          user_bathrooms: number
+          user_bedrooms: number
+          user_furnished?: boolean
+          user_lat: number
+          user_lng: number
+          user_parking_spaces: number
+          user_rental_type?: Database["public"]["Enums"]["rental_type"]
+          user_size: number
+          user_type: string
+          user_usage: Database["public"]["Enums"]["usage"]
+        }
+        Returns: {
+          bathrooms: number
+          bedrooms: number
+          city: string
+          distance_km: number
+          furnished: boolean
           id: string
           link: string
           neighborhood: string

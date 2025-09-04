@@ -13,6 +13,7 @@ type EvaluateResponse = {
   201: {
     processId: string;
   };
+  400: { error: string };
   500: { error: string };
 };
 
@@ -41,6 +42,10 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
   }>('/evaluate', async (request, reply) => {
     try {
       const userProperty = request.body;
+
+      if (!userProperty.usage) {
+        return reply.status(400).send({ error: 'Usage is required' });
+      }
 
       const processId = uuidv4();
       reply.status(201).send({

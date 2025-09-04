@@ -12,7 +12,7 @@ export default async function calculate(
     lat: number;
     lng: number;
     type: string;
-    usage: Enums<'usage'> | null;
+    usage: Enums<'usage'>;
     rental_type: Enums<'rental_type'> | null;
     bedrooms: number;
     bathrooms: number;
@@ -37,7 +37,7 @@ export default async function calculate(
   });
 
   const { data: matches, error } = await fastify.supabase.rpc(
-    'match_properties_structured' as any,
+    'match_properties_structured',
     {
       user_lat: userProperty.lat,
       user_lng: userProperty.lng,
