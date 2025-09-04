@@ -21,10 +21,9 @@ type ProcessResult = {
   200: {
     status: 'done';
     result: {
-      input: string;
       estimatedPrice: number;
       similarProperties: MatchedProperty[];
-      avgPrecision: number;
+      avgPrice: number;
     };
   };
   500: { status: 'error'; error: string };

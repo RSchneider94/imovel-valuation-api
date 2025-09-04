@@ -23,7 +23,7 @@ export default async function calculate(
 ) {
   console.log('⏳ Starting structured calculation...');
 
-  const radiusKm = 20;
+  const radiusKm = 1;
   const matchCount = 20;
 
   console.log('🔍 User property:', {
@@ -63,34 +63,41 @@ export default async function calculate(
 
   if (error) throw error;
 
-  const matchesArray = (matches as any[]) ?? [];
-  const prices = matchesArray.map((m: any) => Number(m.price));
+  const matchesArray = matches ?? [];
+
+  if (matchesArray.length === 0) {
+    return {
+      estimatedPrice: 0,
+      medianPrice: 0,
+      similarProperties: [],
+      avgPrice: 0,
+    };
+  }
+
+  // Extract prices and sort them
+  const prices = matchesArray.map((m) => Number(m.price)).sort((a, b) => a - b);
+
+  // Calculate the median price
+  const middle = Math.floor(prices.length / 2);
+  const medianPrice =
+    prices.length % 2 === 0
+      ? (prices[middle - 1] + prices[middle]) / 2
+      : prices[middle];
+
+  // Calculate the robust average price: remove 10% of the highest and lowest prices
+  const lowerIndex = Math.floor(prices.length * 0.1);
+  const upperIndex = Math.ceil(prices.length * 0.9);
+  const filteredPrices = prices.slice(lowerIndex, upperIndex);
   const avgPrice =
-    prices.length > 0
-      ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length
-      : 0;
+    filteredPrices.reduce((a, b) => a + b, 0) / filteredPrices.length;
+
   const similarProperties: MatchedProperty[] = matchesArray;
 
-  // Calculate the average precision of the matches
-  const scores = matchesArray.map((item: any) => item.similarity_score);
-  const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
-  const avgPrecision =
-    scores.length > 0
-      ? Math.round(
-          scores.reduce(
-            (acc: number, s: number) => acc + (s / maxScore) * 100,
-            0
-          ) / scores.length
-        )
-      : 0;
-
   console.log('✅ Similar properties:', similarProperties.length);
-  console.log('✅ Average precision:', avgPrecision);
 
   return {
-    input: `Structured search for ${userProperty.type} with ${userProperty.bedrooms} bedrooms, ${userProperty.bathrooms} bathrooms, ${userProperty.size}m², ${userProperty.parking_spaces} parking spaces`,
-    estimatedPrice: avgPrice,
+    estimatedPrice: medianPrice,
+    avgPrice,
     similarProperties,
-    avgPrecision,
   };
 }
