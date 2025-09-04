@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 import { Enums } from '../types/database';
@@ -9,51 +8,54 @@ export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
 
 export default async function calculate(
   fastify: FastifyInstance,
-  query: string,
-  userLat: number,
-  userLng: number,
-  userPropertyType: string,
-  userPropertyUsage: Enums<'usage'> | null,
-  userPropertyRentalType: Enums<'rental_type'> | null
-) {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not set');
+  userProperty: {
+    lat: number;
+    lng: number;
+    type: string;
+    usage: Enums<'usage'> | null;
+    rental_type: Enums<'rental_type'> | null;
+    bedrooms: number;
+    bathrooms: number;
+    size: number;
+    parking_spaces: number;
+    furnished: boolean;
   }
-
-  console.log('⏳ Starting calculation...');
-
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  const embeddingResponse = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: query,
-  });
-
-  const queryEmbedding = embeddingResponse.data[0].embedding;
+) {
+  console.log('⏳ Starting structured calculation...');
 
   const radiusKm = 20;
-  const embeddingWeight = 0.3;
-  const geoWeight = 0.7;
   const matchCount = 20;
 
-  console.log('🔍 Embedding:', JSON.stringify(queryEmbedding));
-  console.log('🔍 Filter usage:', userPropertyUsage);
-  console.log('🔍 Filter rental type:', userPropertyRentalType);
-  console.log('🔍 Filter type:', userPropertyType);
+  console.log('🔍 User property:', {
+    type: userProperty.type,
+    usage: userProperty.usage,
+    bedrooms: userProperty.bedrooms,
+    bathrooms: userProperty.bathrooms,
+    size: userProperty.size,
+    parking_spaces: userProperty.parking_spaces,
+    furnished: userProperty.furnished,
+  });
 
   const { data: matches, error } = await fastify.supabase.rpc(
-    'match_properties_hybrid',
+    'match_properties_structured' as any,
     {
-      query_embedding: JSON.stringify(queryEmbedding),
-      user_lat: userLat,
-      user_lng: userLng,
+      user_lat: userProperty.lat,
+      user_lng: userProperty.lng,
+      user_bedrooms: userProperty.bedrooms,
+      user_bathrooms: userProperty.bathrooms,
+      user_size: userProperty.size,
+      user_parking_spaces: userProperty.parking_spaces,
+      user_type: userProperty.type,
+      user_usage: userProperty.usage,
+      user_rental_type: userProperty.rental_type || undefined,
+      user_furnished: userProperty.furnished,
+      // Configurable tolerances
+      bedrooms_tolerance: 1,
+      bathrooms_tolerance: 1,
+      size_tolerance_percent: 0.3, // 30% tolerance in size
+      parking_tolerance: 1,
       radius_km: radiusKm,
-      embedding_weight: embeddingWeight,
-      geo_weight: geoWeight,
       match_count: matchCount,
-      filter_type: userPropertyType,
-      filter_usage: userPropertyUsage || undefined,
-      filter_rental_type: userPropertyRentalType || undefined,
     }
   );
 
@@ -61,22 +63,32 @@ export default async function calculate(
 
   if (error) throw error;
 
-  const prices = matches.map((m) => Number(m.price));
+  const matchesArray = (matches as any[]) ?? [];
+  const prices = matchesArray.map((m: any) => Number(m.price));
   const avgPrice =
-    prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
-  const similarProperties: MatchedProperty[] = matches ?? [];
+    prices.length > 0
+      ? prices.reduce((a: number, b: number) => a + b, 0) / prices.length
+      : 0;
+  const similarProperties: MatchedProperty[] = matchesArray;
 
   // Calculate the average precision of the matches
-  const scores = matches.map((item) => item.hybrid_score);
-  const maxScore = Math.max(...scores);
-  const avgPrecision = Math.round(
-    scores.reduce((acc, s) => acc + (s / maxScore) * 100, 0) / scores.length
-  );
+  const scores = matchesArray.map((item: any) => item.similarity_score);
+  const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
+  const avgPrecision =
+    scores.length > 0
+      ? Math.round(
+          scores.reduce(
+            (acc: number, s: number) => acc + (s / maxScore) * 100,
+            0
+          ) / scores.length
+        )
+      : 0;
 
   console.log('✅ Similar properties:', similarProperties.length);
+  console.log('✅ Average precision:', avgPrecision);
 
   return {
-    input: query,
+    input: `Structured search for ${userProperty.type} with ${userProperty.bedrooms} bedrooms, ${userProperty.bathrooms} bathrooms, ${userProperty.size}m², ${userProperty.parking_spaces} parking spaces`,
     estimatedPrice: avgPrice,
     similarProperties,
     avgPrecision,
