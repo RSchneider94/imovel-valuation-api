@@ -1,4 +1,4 @@
-import { Tables } from './database';
+import { Tables } from './database-custom';
 
 export type Property = Tables<'properties'>;
 

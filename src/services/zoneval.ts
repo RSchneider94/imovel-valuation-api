@@ -1,16 +1,16 @@
-interface ZonevalStats {
+export interface ZonevalStats {
   average: number;
   median: number;
   support: number;
 }
 
-interface ZonevalStatsGroup {
+export interface ZonevalStatsGroup {
   global: ZonevalStats;
   per_m2: ZonevalStats;
   per_room: ZonevalStats;
 }
 
-interface ZonevalResponse {
+export interface ZonevalResponse {
   by_zipcode: ZonevalStatsGroup;
   by_neighbourhood: ZonevalStatsGroup;
   by_city: ZonevalStatsGroup;
@@ -36,10 +36,10 @@ export interface MarketInsights {
 
 export interface ZonevalCacheData {
   zipcode: string;
-  zipcode_stats: any;
+  zipcode_stats: ZonevalStatsGroup;
   neighbourhood_stats: any;
-  city_stats: any;
-  state_stats: any;
+  city_stats: ZonevalStatsGroup;
+  state_stats: ZonevalStatsGroup;
 }
 
 export class ZonevalService {
@@ -91,7 +91,6 @@ export class ZonevalService {
 
   public async validateProperty(
     zipcode: string,
-    estimatedPrice: number,
     propertySize: number
   ): Promise<ZonevalValidation | null> {
     try {
@@ -103,7 +102,7 @@ export class ZonevalService {
       const data = await this.makeRequest(zipcode);
 
       // Calculate price per m² for our estimation
-      const pricePerM2 = estimatedPrice / propertySize;
+      const pricePerM2 = data.by_zipcode.per_m2.median;
       const pricePerM2Median = data.by_zipcode.per_m2.median;
 
       // Calculate market deviation percentage

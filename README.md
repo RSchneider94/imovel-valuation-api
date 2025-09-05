@@ -22,7 +22,6 @@ A Fastify-based API for property valuation with Supabase integration.
    Create a `.env` file in the root directory with:
    ```env
    # Required
-   OPENAI_API_KEY=your_openai_api_key_here
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    PORT=3000
@@ -114,13 +113,6 @@ When the frontend's Autocomplete API fails to provide a zipcode, the backend aut
 
 The system logs the source and confidence level of the retrieved zipcode, ensuring transparency in the market validation process.
 
-### AI-Powered Property Matching
-
-The system uses OpenAI embeddings to find similar properties in your database:
-
-1. **Generates embeddings** for the user's property description
-2. **Finds similar properties** using hybrid search (embedding + geographic proximity)
-3. **Calculates average price** from the most similar properties
 
 ### Market Validation ("Prova dos 9")
 

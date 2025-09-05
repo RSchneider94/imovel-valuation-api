@@ -1,13 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { ZonevalValidation } from './zoneval';
-
-export interface ZonevalCacheData {
-  zipcode: string;
-  zipcode_stats: any;
-  neighbourhood_stats: any;
-  city_stats: any;
-  state_stats: any;
-}
+import { ZonevalCacheData, ZonevalValidation } from './zoneval';
 
 export class ZonevalCacheService {
   private fastify: FastifyInstance;
@@ -17,7 +9,7 @@ export class ZonevalCacheService {
     this.fastify = fastify;
   }
 
-  async getCachedData(zipcode: string): Promise<any> {
+  async getCachedData(zipcode: string): Promise<ZonevalCacheData | null> {
     try {
       const { data, error } = await this.fastify.supabase
         .from('property_market_cache')
@@ -35,10 +27,11 @@ export class ZonevalCacheService {
       }
 
       return {
-        by_zipcode: data.zipcode_stats,
-        by_neighbourhood: data.neighbourhood_stats,
-        by_city: data.city_stats,
-        by_uf: data.state_stats,
+        zipcode: data.zipcode,
+        zipcode_stats: data.zipcode_stats,
+        neighbourhood_stats: data.neighbourhood_stats,
+        city_stats: data.city_stats,
+        state_stats: data.state_stats,
       };
     } catch (error) {
       console.error('❌ Error getting cached data:', error);
@@ -53,10 +46,10 @@ export class ZonevalCacheService {
     try {
       const cacheData = {
         zipcode,
-        zipcode_stats: validation.zipcode as any,
-        neighbourhood_stats: validation.neighbourhood as any,
-        city_stats: validation.city as any,
-        state_stats: validation.state as any,
+        zipcode_stats: validation.zipcode,
+        neighbourhood_stats: validation.neighbourhood,
+        city_stats: validation.city,
+        state_stats: validation.state,
       };
 
       const { error } = await this.fastify.supabase

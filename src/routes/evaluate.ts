@@ -3,10 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { EvaluationRequest } from '../types/common';
 import calculate, { type MatchedProperty } from '../commands/calculate';
 import { capitalize } from '../utils/formatters';
-import {
-  type ZonevalValidation,
-  type MarketInsights,
-} from '../services/zoneval';
 
 type EvaluateResponse = {
   201: {
@@ -21,9 +17,8 @@ type ProcessResult = {
     status: 'done';
     result: {
       estimatedPrice: number;
-      refinedPrice: number;
-      similarProperties: MatchedProperty[];
       avgPrice: number;
+      similarProperties: MatchedProperty[];
     };
   };
   500: { status: 'error'; error: string };

@@ -1,13 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
-import { Enums } from '../types/database';
-import {
-  ZonevalService,
-  type ZonevalValidation,
-  type MarketInsights,
-} from '../services/zoneval';
+import { Enums } from '../types/database-custom';
+import { ZonevalService } from '../services/zoneval';
 import { ZonevalCacheService } from '../services/zoneval-cache';
-import { MarketValidationService } from '../services/market-validation';
 import { GeocodingService } from '../services/geocoding';
 import { cleanZipcode } from '../utils/formatters';
 
@@ -71,6 +66,54 @@ export default async function calculate(
     }
   }
 
+  // Get avg_region_price from Zoneval API
+  let avg_region_price: number | undefined = undefined;
+
+  if (finalZipcode) {
+    console.log('🔍 Fetching regional price data from Zoneval...');
+
+    const zonevalService = new ZonevalService();
+    const cacheService = new ZonevalCacheService(fastify);
+
+    try {
+      // Check cache first
+      const cachedData = await cacheService.getCachedData(finalZipcode);
+      let validation;
+
+      if (cachedData) {
+        console.log('✅ Using cached Zoneval data');
+        // Extract price per m² from cached data
+        avg_region_price = cachedData.zipcode_stats.per_m2.median;
+        console.log(
+          `✅ Regional price per m² (cached): R$ ${avg_region_price.toFixed(2)}`
+        );
+      } else {
+        console.log('🌐 Fetching fresh data from Zoneval API');
+        // Get fresh data from Zoneval API
+        validation = await zonevalService.validateProperty(
+          finalZipcode,
+          userProperty.size
+        );
+
+        if (validation) {
+          avg_region_price = validation.pricePerM2Median;
+          console.log(
+            `✅ Regional price per m²: R$ ${avg_region_price.toFixed(2)}`
+          );
+
+          // Save to cache for future use
+          await cacheService.saveToCache(finalZipcode, validation);
+        } else {
+          console.log('⚠️ Could not fetch regional price data from Zoneval');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Zoneval API error:', error);
+    }
+  } else {
+    console.log('⚠️ No zipcode available for regional price lookup');
+  }
+
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_structured',
     {
@@ -91,6 +134,8 @@ export default async function calculate(
       parking_tolerance: 1,
       radius_km: radiusKm,
       match_count: matchCount,
+      // Regional price per m² from Zoneval API
+      avg_region_price,
     }
   );
 
@@ -129,49 +174,6 @@ export default async function calculate(
   const similarProperties: MatchedProperty[] = matchesArray;
 
   console.log('✅ Similar properties:', similarProperties.length);
-
-  // Market validation with cache
-  let zonevalValidation: ZonevalValidation | null = null;
-  let refinedPrice = avgPrice;
-  let marketInsights: MarketInsights | null = null;
-
-  if (userProperty.zipcode && userProperty.size > 0) {
-  if (finalZipcode && userProperty.size > 0) {
-    console.log('🔍 Validating with Zoneval API...');
-
-    const zonevalService = new ZonevalService();
-    const cacheService = new ZonevalCacheService(fastify);
-    const marketValidationService = new MarketValidationService(
-      zonevalService,
-      cacheService
-    );
-
-    const validationResult = await marketValidationService.validateProperty(
-      finalZipcode,
-      avgPrice,
-      userProperty.size
-    );
-
-    zonevalValidation = validationResult.validation;
-    refinedPrice = validationResult.refinedPrice;
-    marketInsights = validationResult.insights;
-
-    if (zonevalValidation) {
-      console.log('✅ Zoneval validation completed');
-      console.log(`📊 Market reality: ${zonevalValidation.marketReality}`);
-      console.log(`📊 Deviation: ${zonevalValidation.marketDeviation}%`);
-      console.log(`📊 Confidence: ${zonevalValidation.confidence}%`);
-    }
-  } else {
-    console.log(
-      '🔍 CEP or property size not available - skipping market validation'
-    );
-    if (!finalZipcode) {
-      console.log(
-        '💡 Tip: Provide zipcode or ensure coordinates are accurate for better market validation'
-      );
-    }
-  }
 
   return {
     estimatedPrice: medianPrice,
