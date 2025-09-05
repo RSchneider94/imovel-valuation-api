@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
-import { SimilarProperty } from '../types/common';
+import { SimilarProperty, PropertyEvaluationResult } from '../types/common';
 import { Enums } from '../types/database-custom';
 import { processZoneval } from './process-zoneval';
+import { LocationProximityService } from '../services/location-proximity';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -22,7 +23,7 @@ export default async function calculate(
     furnished: boolean;
     zipcode: string;
   }
-) {
+): Promise<PropertyEvaluationResult> {
   console.log('⏳ Starting structured calculation...');
 
   const radiusKm = 1;
@@ -49,6 +50,16 @@ export default async function calculate(
         )
       : { avg_region_price: undefined };
 
+  // First, get proximity analysis for the user property
+  console.log('🏖️ Analyzing user property proximity...');
+  const proximityService = new LocationProximityService();
+  const userProximityAnalysis = await proximityService.getProximityAnalysis({
+    lat: userProperty.lat,
+    lng: userProperty.lng,
+    radius: 1000, // 1km radius
+  });
+
+  // Use existing matching function for now (proximity filtering will be added later)
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_structured',
     {
@@ -87,11 +98,20 @@ export default async function calculate(
       medianPrice: 0,
       similarProperties: [],
       avgPrice: 0,
+      proximityAnalysis: userProximityAnalysis,
+      marketInsights: {
+        proximityScore: userProximityAnalysis.overallProximityScore,
+        beachAccess: userProximityAnalysis.hasBeachAccess,
+        shoppingAccess: userProximityAnalysis.hasShoppingAccess,
+        keyLandmarks: [],
+      },
     };
   }
 
   // Extract prices and sort them
-  const prices = matchesArray.map((m) => Number(m.price)).sort((a, b) => a - b);
+  const prices = matchesArray
+    .map((m: any) => Number(m.price))
+    .sort((a: number, b: number) => a - b);
 
   // Calculate the median price
   const middle = Math.floor(prices.length / 2);
@@ -111,9 +131,30 @@ export default async function calculate(
 
   console.log('✅ Similar properties:', similarProperties.length);
 
+  // Generate market insights based on proximity analysis
+  const marketInsights = {
+    proximityScore: userProximityAnalysis.overallProximityScore,
+    beachAccess: userProximityAnalysis.hasBeachAccess,
+    shoppingAccess: userProximityAnalysis.hasShoppingAccess,
+    keyLandmarks: userProximityAnalysis.landmarks
+      .filter((l) => l.proximityScore > 50) // Only high-proximity landmarks
+      .map((l) => l.name)
+      .slice(0, 5), // Top 5 most relevant
+  };
+
+  console.log('✅ Proximity analysis complete:', {
+    overallScore: userProximityAnalysis.overallProximityScore,
+    beachAccess: userProximityAnalysis.hasBeachAccess,
+    landmarksFound: userProximityAnalysis.landmarks.length,
+    cacheHit: userProximityAnalysis.cacheHit,
+  });
+
   return {
     estimatedPrice: medianPrice,
+    medianPrice,
     avgPrice,
-    similarProperties,
+    similarProperties: similarProperties as SimilarProperty[],
+    proximityAnalysis: userProximityAnalysis,
+    marketInsights,
   };
 }

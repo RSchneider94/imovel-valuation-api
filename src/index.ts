@@ -8,6 +8,7 @@ import supabasePlugin from './plugins/supabase';
 // Routes
 import evaluateRoutes from './routes/evaluate';
 import propertyRoutes from './routes/property';
+import proximityRoutes from './routes/proximity';
 
 // Load environment variables
 dotenv.config({
@@ -49,6 +50,7 @@ server.register(cors, {
 // Register routes
 server.register(evaluateRoutes);
 server.register(propertyRoutes);
+server.register(proximityRoutes);
 
 // Health check route
 server.get('/health', async () => {

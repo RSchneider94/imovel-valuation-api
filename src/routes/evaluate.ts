@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
-import { EvaluationRequest } from '../types/common';
+import { EvaluationRequest, PropertyEvaluationResult } from '../types/common';
 import calculate, { type MatchedProperty } from '../commands/calculate';
 import { capitalize } from '../utils/formatters';
 import { isNullish } from '../utils/validators';
@@ -16,11 +16,7 @@ type EvaluateResponse = {
 type ProcessResult = {
   200: {
     status: 'done';
-    result: {
-      estimatedPrice: number;
-      avgPrice: number;
-      similarProperties: MatchedProperty[];
-    };
+    result: PropertyEvaluationResult;
   };
   500: { status: 'error'; error: string };
 };
