@@ -34,7 +34,18 @@ export class GeocodingService {
       `🔍 Attempting reverse geocoding for coordinates: ${lat}, ${lng}`
     );
 
-    // Strategy 1: Google Geocoding API (most accurate)
+    // Strategy 1: OpenStreetMap Nominatim (free, good for Brazil)
+    try {
+      const result = await this.getZipcodeFromNominatim(lat, lng, language);
+      if (result?.zipcode) {
+        console.log(`✅ Found zipcode via Nominatim: ${result.zipcode}`);
+        return result;
+      }
+    } catch (error) {
+      console.warn('⚠️ Nominatim Geocoding failed:', error);
+    }
+
+    // Strategy 2: Google Geocoding API (most accurate)
     if (this.GOOGLE_API_KEY) {
       try {
         const result = await this.getZipcodeFromGoogle(lat, lng, language);
@@ -45,17 +56,6 @@ export class GeocodingService {
       } catch (error) {
         console.warn('⚠️ Google Geocoding failed:', error);
       }
-    }
-
-    // Strategy 2: OpenStreetMap Nominatim (free, good for Brazil)
-    try {
-      const result = await this.getZipcodeFromNominatim(lat, lng, language);
-      if (result?.zipcode) {
-        console.log(`✅ Found zipcode via Nominatim: ${result.zipcode}`);
-        return result;
-      }
-    } catch (error) {
-      console.warn('⚠️ Nominatim Geocoding failed:', error);
     }
 
     console.log('❌ No zipcode found through any geocoding service');
