@@ -71,6 +71,7 @@ export default async function calculate(
       match_count: matchCount,
       // Regional price per m² from Zoneval API
       avg_region_price,
+      max_price_deviation: 0.05,
     }
   );
 
