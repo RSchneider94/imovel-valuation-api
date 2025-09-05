@@ -34,13 +34,6 @@ export interface Landmark {
 export enum LandmarkKeyword {
   BEACH = 'praia',
   SHOPPING_MALL = 'shopping',
-  HOSPITAL = 'hospital',
-  SCHOOL = 'escola',
-  PARK = 'parque',
-  RESTAURANT = 'restaurante',
-  BANK = 'banco',
-  GYM = 'academia',
-  PHARMACY = 'farmacia',
 }
 
 export interface ProximityResult {

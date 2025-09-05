@@ -26,34 +26,17 @@ export class LocationProximityService {
   private readonly DEFAULT_LANDMARK_KEYWORDS = [
     LandmarkKeyword.BEACH,
     LandmarkKeyword.SHOPPING_MALL,
-    LandmarkKeyword.HOSPITAL,
-    LandmarkKeyword.SCHOOL,
-    LandmarkKeyword.PARK,
   ];
 
   // Weights for proximity scoring (higher = more important for property value)
   private readonly PROXIMITY_WEIGHTS: Record<LandmarkKeyword, number> = {
     [LandmarkKeyword.BEACH]: 0.25,
     [LandmarkKeyword.SHOPPING_MALL]: 0.15,
-    [LandmarkKeyword.HOSPITAL]: 0.1,
-    [LandmarkKeyword.SCHOOL]: 0.15,
-    [LandmarkKeyword.PARK]: 0.1,
-    [LandmarkKeyword.RESTAURANT]: 0.05,
-    [LandmarkKeyword.BANK]: 0.05,
-    [LandmarkKeyword.GYM]: 0.05,
-    [LandmarkKeyword.PHARMACY]: 0.05,
   };
 
   private readonly THRESHOLDS: Record<LandmarkKeyword, number> = {
-    [LandmarkKeyword.BEACH]: 200,
+    [LandmarkKeyword.BEACH]: 750,
     [LandmarkKeyword.SHOPPING_MALL]: 1500,
-    [LandmarkKeyword.HOSPITAL]: 200,
-    [LandmarkKeyword.SCHOOL]: 100,
-    [LandmarkKeyword.PARK]: 50,
-    [LandmarkKeyword.RESTAURANT]: 1000,
-    [LandmarkKeyword.BANK]: 1000,
-    [LandmarkKeyword.GYM]: 500,
-    [LandmarkKeyword.PHARMACY]: 500,
   };
 
   /**
@@ -115,7 +98,6 @@ export class LocationProximityService {
       const overallProximityScore =
         this.calculateOverallProximityScore(scoredLandmarks);
 
-      // More strict validation for beach access - must be within 200m and have good proximity score
       const hasBeachAccess = scoredLandmarks.some(
         (l) =>
           l.keyword === LandmarkKeyword.BEACH &&
@@ -148,6 +130,13 @@ export class LocationProximityService {
         hasShopping: result.hasShoppingAccess,
         beachLandmarks: scoredLandmarks
           .filter((l) => l.keyword === LandmarkKeyword.BEACH)
+          .map((l) => ({
+            name: l.name,
+            distance: Math.round(l.distance),
+            score: l.proximityScore,
+          })),
+        shoppingLandmarks: scoredLandmarks
+          .filter((l) => l.keyword === LandmarkKeyword.SHOPPING_MALL)
           .map((l) => ({
             name: l.name,
             distance: Math.round(l.distance),
