@@ -113,27 +113,6 @@ export type Database = {
           updated_at: string | null
           usage: Database["public"]["Enums"]["usage"] | null
         }
-          bathrooms: number;
-          bedrooms: number;
-          city: string;
-          created_at: string | null;
-          embedding: string | null;
-          furnished: boolean | null;
-          id: string;
-          lat: number | null;
-          link: string | null;
-          lng: number | null;
-          neighborhood: string | null;
-          parking_spaces: number;
-          price: number;
-          property_id: string | null;
-          rental_type: Database['public']['Enums']['rental_type'] | null;
-          size: number;
-          state: string;
-          street: string;
-          type: string;
-          usage: Database['public']['Enums']['usage'] | null;
-        };
         Insert: {
           bathrooms: number
           bedrooms: number
@@ -157,27 +136,6 @@ export type Database = {
           updated_at?: string | null
           usage?: Database["public"]["Enums"]["usage"] | null
         }
-          bathrooms: number;
-          bedrooms: number;
-          city: string;
-          created_at?: string | null;
-          embedding?: string | null;
-          furnished?: boolean | null;
-          id?: string;
-          lat?: number | null;
-          link?: string | null;
-          lng?: number | null;
-          neighborhood?: string | null;
-          parking_spaces: number;
-          price: number;
-          property_id?: string | null;
-          rental_type?: Database['public']['Enums']['rental_type'] | null;
-          size: number;
-          state: string;
-          street: string;
-          type: string;
-          usage?: Database['public']['Enums']['usage'] | null;
-        };
         Update: {
           bathrooms?: number
           bedrooms?: number
@@ -203,29 +161,6 @@ export type Database = {
         }
         Relationships: []
       }
-          bathrooms?: number;
-          bedrooms?: number;
-          city?: string;
-          created_at?: string | null;
-          embedding?: string | null;
-          furnished?: boolean | null;
-          id?: string;
-          lat?: number | null;
-          link?: string | null;
-          lng?: number | null;
-          neighborhood?: string | null;
-          parking_spaces?: number;
-          price?: number;
-          property_id?: string | null;
-          rental_type?: Database['public']['Enums']['rental_type'] | null;
-          size?: number;
-          state?: string;
-          street?: string;
-          type?: string;
-          usage?: Database['public']['Enums']['usage'] | null;
-        };
-        Relationships: [];
-      };
       property_evaluations: {
         Row: {
           address: string
@@ -314,25 +249,6 @@ export type Database = {
         Relationships: []
       }
     }
-          address?: string;
-          area_sqm?: number;
-          bathrooms?: number;
-          bedrooms?: number;
-          created_at?: string;
-          estimated_value?: number | null;
-          id?: string;
-          latitude?: number | null;
-          longitude?: number | null;
-          parking_spaces?: number;
-          property_type?: string;
-          similar_properties?: Json | null;
-          user_id?: string;
-          value_range_max?: number | null;
-          value_range_min?: number | null;
-        };
-        Relationships: [];
-      };
-    };
     Views: {
       [_ in never]: never
     }
@@ -441,27 +357,6 @@ export type Database = {
         Args: { "": unknown }
         Returns: number
       }
-        Args: { '': unknown };
-        Returns: number;
-      };
-      match_properties: {
-        Args: { match_count?: number; query_embedding: string };
-        Returns: {
-          bathrooms: number;
-          bedrooms: number;
-          city: string;
-          id: string;
-          neighborhood: string;
-          parking_spaces: number;
-          price: number;
-          similarity: number;
-          size: number;
-          state: string;
-          street: string;
-          type: string;
-          usage: string;
-        }[];
-      };
       match_properties_hybrid: {
         Args: {
           embedding_weight?: number
@@ -538,27 +433,6 @@ export type Database = {
           usage: Database["public"]["Enums"]["usage"]
         }[]
       }
-          bathrooms: number;
-          bedrooms: number;
-          city: string;
-          distance_km: number;
-          embedding_score: number;
-          furnished: boolean;
-          hybrid_score: number;
-          id: string;
-          link: string;
-          neighborhood: string;
-          parking_spaces: number;
-          price: number;
-          property_id: string;
-          rental_type: Database['public']['Enums']['rental_type'];
-          size: number;
-          state: string;
-          street: string;
-          type: string;
-          usage: Database['public']['Enums']['usage'];
-        }[];
-      };
       sec_to_gc: {
         Args: { "": number }
         Returns: number
