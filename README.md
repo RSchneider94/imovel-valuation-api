@@ -6,7 +6,9 @@ A Fastify-based API for property valuation with Supabase integration.
 
 - Fastify server with TypeScript support
 - Supabase integration for data storage
-- Property evaluation endpoints
+- Property evaluation endpoints with AI-powered similarity matching
+- **Market validation using Zoneval API** - "Prova dos 9" feature
+- **Smart CEP fallback system** - Automatically retrieves zipcode from coordinates when Autocomplete API fails
 - Environment-based configuration
 
 ## Setup
@@ -19,10 +21,14 @@ A Fastify-based API for property valuation with Supabase integration.
 2. **Environment Configuration:**
    Create a `.env` file in the root directory with:
    ```env
+   # Required
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
    PORT=3000
    NODE_ENV=development
+   ZONEVAL_API_KEY=your_zoneval_api_key_here
+   ZONEVAL_API_SECRET=your_zoneval_api_secret_here
+   GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
    ```
 
 3. **Supabase Setup:**
@@ -59,24 +65,65 @@ npm start
 - `POST /evaluate` - Create a new property evaluation
   ```json
   {
-    "propertyType": "apartment",
-    "location": "São Paulo, SP",
+    "type": "apartamento",
+    "usage": "venda",
+    "rental_type": null,
     "size": 80,
     "bedrooms": 2,
-    "bathrooms": 1
+    "bathrooms": 1,
+    "parking_spaces": 1,
+    "furnished": false,
+    "street": "Rua das Flores",
+    "neighborhood": "Centro",
+    "city": "São Paulo",
+    "state": "SP",
+    "lat": -23.5505,
+    "lng": -46.6333,
+    "zipcode": "01234-567"
   }
   ```
 
-- `GET /evaluations` - Get all property evaluations
+- `GET /evaluate/:processId` - Get evaluation results via Server-Sent Events
+
+**Response includes:**
+- `estimatedPrice`: Initial AI-based estimation
+- `refinedPrice`: Price adjusted based on market validation
+- `zonevalValidation`: Market data from Zoneval API
+- `marketInsights`: Analysis and recommendations with type safety
 
 ## How the Integration Works
 
-The `fastify-supabase` plugin automatically:
+### Smart CEP Fallback System
 
-1. **Registers the Supabase client** with your Fastify instance
-2. **Makes the client available** via `fastify.supabase` in your routes
-3. **Handles connection management** and error handling
-4. **Provides type safety** for Supabase operations
+When the frontend's Autocomplete API fails to provide a zipcode, the backend automatically attempts to retrieve it using reverse geocoding:
+
+1. **Google Geocoding API** (if `GOOGLE_MAPS_API_KEY` is provided)
+   - Most accurate results
+   - Requires API key but provides highest confidence
+
+2. **OpenStreetMap Nominatim** (free fallback)
+   - No API key required
+   - Good coverage for Brazil
+   - Slightly lower accuracy than Google
+
+3. **ViaCEP Integration** (Brazil-specific fallback)
+   - Searches for nearest CEPs in the area
+   - Uses city/state information from other services
+   - Provides reasonable approximations
+
+The system logs the source and confidence level of the retrieved zipcode, ensuring transparency in the market validation process.
+
+
+### Market Validation ("Prova dos 9")
+
+When Zoneval API credentials are configured, the system:
+
+1. **Checks cache first** for existing market data (7-day validity)
+2. **Queries Zoneval API** only if cache is missing or expired
+3. **Compares estimated price** with local market reality
+4. **Provides refined price** and market insights
+5. **Gives confidence score** based on available data
+6. **Caches results** for future use and historical analysis
 
 ### Accessing Supabase in Routes
 
@@ -95,10 +142,21 @@ const { data, error } = await supabase
 ```
 src/
 ├── index.ts              # Main server file
+├── commands/
+│   └── calculate.ts      # Property calculation logic
 ├── plugins/
 │   └── supabase.ts      # Supabase plugin configuration
-└── routes/
-    └── evaluate.ts       # Property evaluation routes
+├── routes/
+│   └── evaluate.ts       # Property evaluation routes
+├── services/
+│   ├── zoneval.ts       # Zoneval API integration
+│   ├── zoneval-cache.ts # Cache management for Zoneval
+│   └── market-validation.ts # Market validation business logic
+├── types/
+│   ├── common.ts        # Common type definitions
+│   └── database.ts      # Database schema types
+└── utils/
+    └── formatters.ts    # Utility functions
 ```
 
 ## Dependencies

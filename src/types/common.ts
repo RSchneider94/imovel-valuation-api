@@ -1,4 +1,4 @@
-import { Tables } from './database';
+import { Tables } from './database-custom';
 
 export type Property = Tables<'properties'>;
 
@@ -10,3 +10,11 @@ export type SimilarProperty = Omit<
 };
 
 export type SimilarProperties = SimilarProperty[];
+
+// Specific type for evaluation request with zipcode
+export type EvaluationRequest = Omit<
+  Property,
+  'id' | 'link' | 'price' | 'created_at' | 'updated_at' | 'embedding'
+> & {
+  zipcode?: string;
+};

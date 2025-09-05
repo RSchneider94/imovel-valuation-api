@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../types/database';
+import { Database } from '../types/database-custom';
 
 export default fp(
   async (fastify) => {

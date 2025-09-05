@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
-import { Enums } from '../types/database';
+import { Enums } from '../types/database-custom';
+import { processZoneval } from './process-zoneval';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -19,6 +20,7 @@ export default async function calculate(
     size: number;
     parking_spaces: number;
     furnished: boolean;
+    zipcode: string;
   }
 ) {
   console.log('⏳ Starting structured calculation...');
@@ -34,7 +36,18 @@ export default async function calculate(
     size: userProperty.size,
     parking_spaces: userProperty.parking_spaces,
     furnished: userProperty.furnished,
+    zipcode: userProperty.zipcode,
   });
+
+  const { avg_region_price } =
+    userProperty.usage === 'venda'
+      ? await processZoneval(
+          userProperty.zipcode,
+          userProperty.lat,
+          userProperty.lng,
+          fastify
+        )
+      : { avg_region_price: undefined };
 
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_structured',
@@ -56,6 +69,9 @@ export default async function calculate(
       parking_tolerance: 1,
       radius_km: radiusKm,
       match_count: matchCount,
+      // Regional price per m² from Zoneval API
+      avg_region_price,
+      max_price_deviation: 0.05,
     }
   );
 

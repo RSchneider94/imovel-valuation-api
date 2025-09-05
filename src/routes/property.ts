@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { Tables } from '../types/database';
+import { Tables } from '../types/database-custom';
 
 type PropertyTypesResponse = {
   200: Tables<'properties'>['type'][];

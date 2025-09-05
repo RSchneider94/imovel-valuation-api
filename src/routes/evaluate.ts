@@ -1,13 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
-import { Property } from '../types/common';
+import { EvaluationRequest } from '../types/common';
 import calculate, { type MatchedProperty } from '../commands/calculate';
 import { capitalize } from '../utils/formatters';
-
-type EvaluateBody = Omit<
-  Property,
-  'id' | 'link' | 'price' | 'created_at' | 'updated_at' | 'embedding'
->;
+import { isNullish } from '../utils/validators';
 
 type EvaluateResponse = {
   201: {
@@ -22,8 +18,8 @@ type ProcessResult = {
     status: 'done';
     result: {
       estimatedPrice: number;
-      similarProperties: MatchedProperty[];
       avgPrice: number;
+      similarProperties: MatchedProperty[];
     };
   };
   500: { status: 'error'; error: string };
@@ -36,13 +32,13 @@ const processResults: Record<
 
 export default async function evaluateRoutes(fastify: FastifyInstance) {
   fastify.post<{
-    Body: EvaluateBody;
+    Body: EvaluationRequest;
     Reply: EvaluateResponse;
   }>('/evaluate', async (request, reply) => {
     try {
-      const userProperty = request.body;
+      const userProperty: EvaluationRequest = request.body;
 
-      if (!userProperty.usage) {
+      if (!userProperty.usage || isNullish(userProperty.zipcode)) {
         return reply.status(400).send({ error: 'Usage is required' });
       }
 
@@ -63,6 +59,7 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
           size: userProperty.size,
           parking_spaces: userProperty.parking_spaces,
           furnished: userProperty.furnished ?? false,
+          zipcode: userProperty.zipcode,
         });
         console.log('✅ Calculation completed');
         processResults[processId] = {
