@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EvaluationRequest } from '../types/common';
 import calculate, { type MatchedProperty } from '../commands/calculate';
 import { capitalize } from '../utils/formatters';
+import { isNullish } from '../utils/validators';
 
 type EvaluateResponse = {
   201: {
@@ -37,7 +38,7 @@ export default async function evaluateRoutes(fastify: FastifyInstance) {
     try {
       const userProperty: EvaluationRequest = request.body;
 
-      if (!userProperty.usage || !userProperty.zipcode) {
+      if (!userProperty.usage || isNullish(userProperty.zipcode)) {
         return reply.status(400).send({ error: 'Usage is required' });
       }
 

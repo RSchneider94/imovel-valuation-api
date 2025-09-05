@@ -90,8 +90,7 @@ export class ZonevalService {
   }
 
   public async validateProperty(
-    zipcode: string,
-    propertySize: number
+    zipcode: string
   ): Promise<ZonevalValidation | null> {
     try {
       if (zipcode.length !== 8) {

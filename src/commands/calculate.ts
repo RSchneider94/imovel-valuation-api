@@ -1,10 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { SimilarProperty } from '../types/common';
 import { Enums } from '../types/database-custom';
-import { ZonevalService } from '../services/zoneval';
-import { ZonevalCacheService } from '../services/zoneval-cache';
-import { GeocodingService } from '../services/geocoding';
-import { cleanZipcode } from '../utils/formatters';
+import { processZoneval } from './process-zoneval';
 
 export type MatchedProperty = Omit<SimilarProperty, 'usage'> & {
   usage: string;
@@ -42,77 +39,15 @@ export default async function calculate(
     zipcode: userProperty.zipcode,
   });
 
-  // Fallback: Get zipcode from coordinates if not provided
-  let finalZipcode = cleanZipcode(userProperty.zipcode ?? '');
-  if (!finalZipcode && userProperty.lat && userProperty.lng) {
-    console.log('🔍 No zipcode provided, attempting reverse geocoding...');
-    try {
-      const geocodingService = new GeocodingService();
-      const geocodingResult = await geocodingService.getZipcodeFromCoordinates({
-        lat: userProperty.lat,
-        lng: userProperty.lng,
-      });
-
-      if (geocodingResult?.zipcode) {
-        finalZipcode = geocodingResult.zipcode;
-        console.log(
-          `✅ Retrieved zipcode via geocoding: ${finalZipcode} (source: ${geocodingResult.source})`
-        );
-      } else {
-        console.log('⚠️ Could not retrieve zipcode from coordinates');
-      }
-    } catch (error) {
-      console.warn('⚠️ Geocoding fallback failed:', error);
-    }
-  }
-
-  // Get avg_region_price from Zoneval API
-  let avg_region_price: number | undefined = undefined;
-
-  if (finalZipcode) {
-    console.log('🔍 Fetching regional price data from Zoneval...');
-
-    const zonevalService = new ZonevalService();
-    const cacheService = new ZonevalCacheService(fastify);
-
-    try {
-      // Check cache first
-      const cachedData = await cacheService.getCachedData(finalZipcode);
-      let validation;
-
-      if (cachedData) {
-        console.log('✅ Using cached Zoneval data');
-        // Extract price per m² from cached data
-        avg_region_price = cachedData.zipcode_stats.per_m2.median;
-        console.log(
-          `✅ Regional price per m² (cached): R$ ${avg_region_price.toFixed(2)}`
-        );
-      } else {
-        console.log('🌐 Fetching fresh data from Zoneval API');
-        // Get fresh data from Zoneval API
-        validation = await zonevalService.validateProperty(
-          finalZipcode,
-          userProperty.size
-        );
-
-        if (validation) {
-          avg_region_price = validation.pricePerM2Median;
-          console.log(
-            `✅ Regional price per m²: R$ ${avg_region_price.toFixed(2)}`
-          );
-
-          // Save to cache for future use
-          await cacheService.saveToCache(finalZipcode, validation);
-        } else {
-          console.log('⚠️ Could not fetch regional price data from Zoneval');
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Zoneval API error:', error);
-    }
-  } else {
-    console.log('⚠️ No zipcode available for regional price lookup');
-  }
+  const { avg_region_price } =
+    userProperty.usage === 'venda'
+      ? await processZoneval(
+          userProperty.zipcode,
+          userProperty.lat,
+          userProperty.lng,
+          fastify
+        )
+      : { avg_region_price: undefined };
 
   const { data: matches, error } = await fastify.supabase.rpc(
     'match_properties_structured',

@@ -3,7 +3,7 @@ import { ZonevalCacheData, ZonevalValidation } from './zoneval';
 
 export class ZonevalCacheService {
   private fastify: FastifyInstance;
-  private readonly CACHE_VALIDITY_DAYS = 7;
+  private readonly CACHE_VALIDITY_DAYS = 30;
 
   constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
@@ -73,45 +73,5 @@ export class ZonevalCacheService {
     const cacheAge = Date.now() - new Date(updatedAt).getTime();
     const maxAge = this.CACHE_VALIDITY_DAYS * 24 * 60 * 60 * 1000; // days in milliseconds
     return cacheAge > maxAge;
-  }
-
-  async getCacheStats(): Promise<{
-    total: number;
-    valid: number;
-    expired: number;
-  }> {
-    try {
-      const { data, error } = await this.fastify.supabase
-        .from('property_market_cache')
-        .select('updated_at');
-
-      if (error || !data) {
-        return { total: 0, valid: 0, expired: 0 };
-      }
-
-      const now = Date.now();
-      const maxAge = this.CACHE_VALIDITY_DAYS * 24 * 60 * 60 * 1000;
-
-      const stats = data.reduce(
-        (acc, item) => {
-          if (!item.updated_at) {
-            return acc;
-          }
-          const age = now - new Date(item.updated_at).getTime();
-          if (age <= maxAge) {
-            acc.valid++;
-          } else {
-            acc.expired++;
-          }
-          return acc;
-        },
-        { total: data.length, valid: 0, expired: 0 }
-      );
-
-      return stats;
-    } catch (error) {
-      console.error('❌ Error getting cache stats:', error);
-      return { total: 0, valid: 0, expired: 0 };
-    }
   }
 }
